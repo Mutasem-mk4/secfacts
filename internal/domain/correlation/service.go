@@ -17,18 +17,22 @@ func (Service) Correlate(_ context.Context, findings []evidence.Finding) ([]evid
 	}
 
 	compact := make([]CompactFinding, 0, len(findings))
-	for index, finding := range findings {
-		compact = append(compact, Compact(finding, index))
+	representatives := make(map[string]evidence.Finding, len(findings)/4+1)
+	for _, finding := range findings {
+		ref := evidence.FindingRef{Path: finding.Source.Provider}
+		item := Compact(finding, ref)
+		compact = append(compact, item)
+		updateRepresentative(representatives, item, finding)
 	}
 
-	return correlateCompact(findings, compact), nil
+	return correlateCompact(compact, representatives), nil
 }
 
-func (Service) CorrelateCompact(_ context.Context, findings []evidence.Finding, compact []CompactFinding) ([]evidence.RootCauseCluster, error) {
-	return correlateCompact(findings, compact), nil
+func (Service) CorrelateCompact(_ context.Context, compact []CompactFinding, representatives map[string]evidence.Finding) ([]evidence.RootCauseCluster, error) {
+	return correlateCompact(compact, representatives), nil
 }
 
-func correlateCompact(findings []evidence.Finding, compact []CompactFinding) []evidence.RootCauseCluster {
+func correlateCompact(compact []CompactFinding, representatives map[string]evidence.Finding) []evidence.RootCauseCluster {
 	if len(compact) == 0 {
 		return nil
 	}
@@ -58,9 +62,7 @@ func correlateCompact(findings []evidence.Finding, compact []CompactFinding) []e
 
 		cluster := &clusters[index]
 		cluster.FindingIDs = append(cluster.FindingIDs, item.ID)
-		if shouldReplaceRepresentativeScore(cluster.Representative.Severity.Score, item.SeverityScore) {
-			cluster.Representative = findings[item.FindingIndex]
-		}
+		cluster.Representative = representatives[id]
 	}
 
 	result := clusters[:0]
@@ -126,6 +128,14 @@ func correlationKey(f evidence.Finding) (string, string, string) {
 	return "", "", ""
 }
 
-func shouldReplaceRepresentativeScore(current float64, candidate float64) bool {
-	return candidate > current || current == 0
+func updateRepresentative(representatives map[string]evidence.Finding, compact CompactFinding, finding evidence.Finding) {
+	if compact.CorrelationKey == "" {
+		return
+	}
+
+	id := compact.CorrelationType + "|" + compact.CorrelationKey
+	current, exists := representatives[id]
+	if !exists || current.Severity.Score < compact.SeverityScore {
+		representatives[id] = finding
+	}
 }

@@ -88,6 +88,9 @@ func newRootCommand(ctx context.Context, cfg bootstrap.Config, logger zerolog.Lo
 	cmd.PersistentFlags().Int("workers", cfg.Workers, "Maximum concurrent workers for ingestion")
 
 	cmd.AddCommand(newNormalizeCommand(cfg, logger, parserRegistry, exporterRegistry))
+	cmd.AddCommand(newCompletionCommand(cmd))
+	cmd.AddCommand(newServeCommand(cfg, logger))
+	cmd.AddCommand(newWorkerCommand(cfg, logger))
 
 	return cmd, nil
 }
@@ -115,9 +118,10 @@ func newNormalizeCommand(
 	var concurrency int
 
 	cmd := &cobra.Command{
-		Use:   "normalize <report> [report...]",
-		Short: "Normalize one or more security reports into the internal evidence model.",
-		Args:  cobra.MinimumNArgs(1),
+		Use:     "normalize <report> [report...]",
+		Aliases: []string{"ingest"},
+		Short:   "Normalize one or more security reports into the internal evidence model.",
+		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if concurrency <= 0 {
 				return sferr.New(sferr.CodeInvalidArgument, "normalize", "concurrency must be greater than zero")
@@ -142,10 +146,30 @@ func newNormalizeCommand(
 			}
 
 			inputs := make([]ingest.Input, 0, len(args))
+			cleanupInputs := make([]func(), 0, len(args))
+			defer func() {
+				for _, cleanup := range cleanupInputs {
+					cleanup()
+				}
+			}()
+			usesStdin := false
 			for _, arg := range args {
+				if arg == "-" {
+					if usesStdin {
+						return sferr.New(sferr.CodeInvalidArgument, "normalize", "stdin can only be specified once")
+					}
+					usesStdin = true
+					input, cleanup, err := materializeStdinInput(source)
+					if err != nil {
+						return err
+					}
+					cleanupInputs = append(cleanupInputs, cleanup)
+					inputs = append(inputs, input)
+					continue
+				}
 				inputs = append(inputs, ingest.Input{
 					Path:   arg,
-					Source: source,
+					Source: sourceForInput(source, arg),
 				})
 			}
 
@@ -183,7 +207,14 @@ func newNormalizeCommand(
 					Msg("starting normalization")
 			}
 
-			document, err := service.Run(cmd.Context(), ingest.Request{
+			policy, err := loadPolicy(policyPath)
+			if err != nil {
+				return err
+			}
+			mergePolicyFlags(&policy, failOnSeverity)
+			retainFindings := shouldEvaluate(policy, baselinePath)
+
+			result, err := service.Run(cmd.Context(), ingest.Request{
 				Inputs: inputs,
 				Output: ports.ExportRequest{
 					Writer: writer,
@@ -195,16 +226,11 @@ func newNormalizeCommand(
 						GeneratorID:  awsGeneratorID,
 					},
 				},
+				RetainFindings: retainFindings,
 			})
 			if err != nil {
 				return err
 			}
-
-			policy, err := loadPolicy(policyPath)
-			if err != nil {
-				return err
-			}
-			mergePolicyFlags(&policy, failOnSeverity)
 
 			if shouldEvaluate(policy, baselinePath) {
 				baselineDocument, err := loadBaseline(cmd.Context(), baselinePath)
@@ -215,7 +241,7 @@ func newNormalizeCommand(
 				decision, err := evaluate.Service{
 					Engine: domainpolicy.Service{},
 				}.Run(cmd.Context(), evaluate.Request{
-					Document: document,
+					Document: evidence.Document{Findings: result.Findings},
 					Baseline: baselineDocument,
 					Policy:   policy,
 				})
@@ -231,12 +257,12 @@ func newNormalizeCommand(
 					Msg("policy evaluation completed")
 
 				if !decision.Passed {
-					renderSummaryTable(cmd.ErrOrStderr(), document)
+					renderSummaryTable(cmd.ErrOrStderr(), result)
 					return sferr.New(sferr.CodePolicyViolation, "normalize", summarizeViolations(decision.Violations))
 				}
 			}
 
-			renderSummaryTable(cmd.ErrOrStderr(), document)
+			renderSummaryTable(cmd.ErrOrStderr(), result)
 			if !quiet {
 				logger.Info().Msg("normalization completed")
 			}
@@ -261,6 +287,27 @@ func newNormalizeCommand(
 	cmd.Flags().StringVar(&awsGeneratorID, "aws-generator-id", "", "Generator ID for ASFF exports; falls back to SECFACTS_AWS_GENERATOR_ID")
 
 	return cmd
+}
+
+func newCompletionCommand(root *cobra.Command) *cobra.Command {
+	return &cobra.Command{
+		Use:       "completion [bash|zsh|fish]",
+		Short:     "Generate shell completion scripts",
+		Args:      cobra.ExactArgs(1),
+		ValidArgs: []string{"bash", "zsh", "fish"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			switch args[0] {
+			case "bash":
+				return root.GenBashCompletion(cmd.OutOrStdout())
+			case "zsh":
+				return root.GenZshCompletion(cmd.OutOrStdout())
+			case "fish":
+				return root.GenFishCompletion(cmd.OutOrStdout(), true)
+			default:
+				return sferr.New(sferr.CodeInvalidArgument, "completion", "unsupported shell: "+args[0])
+			}
+		},
+	}
 }
 
 func newRegistries() (*registry.ParserRegistry, *registry.ExporterRegistry, error) {
@@ -305,6 +352,35 @@ func defaultOutputLabel(path string) string {
 	}
 
 	return path
+}
+
+func sourceForInput(source evidence.SourceDescriptor, path string) evidence.SourceDescriptor {
+	source.URI = path
+	return source
+}
+
+func materializeStdinInput(source evidence.SourceDescriptor) (ingest.Input, func(), error) {
+	file, err := os.CreateTemp("", "secfacts-stdin-*.json")
+	if err != nil {
+		return ingest.Input{}, nil, sferr.Wrap(sferr.CodeIO, "normalize.stdin", err, "create temporary stdin file")
+	}
+
+	if _, err := io.Copy(file, os.Stdin); err != nil {
+		_ = file.Close()
+		_ = os.Remove(file.Name())
+		return ingest.Input{}, nil, sferr.Wrap(sferr.CodeIO, "normalize.stdin", err, "copy stdin to temporary file")
+	}
+	if err := file.Close(); err != nil {
+		_ = os.Remove(file.Name())
+		return ingest.Input{}, nil, sferr.Wrap(sferr.CodeIO, "normalize.stdin", err, "close temporary stdin file")
+	}
+
+	return ingest.Input{
+			Path:   file.Name(),
+			Source: sourceForInput(source, "stdin"),
+		}, func() {
+			_ = os.Remove(file.Name())
+		}, nil
 }
 
 func loadPolicy(path string) (domainpolicy.Policy, error) {
@@ -392,26 +468,19 @@ func (o progressObserver) OnExportCompleted(_ context.Context, format string, fi
 		Msg("export completed")
 }
 
-func renderSummaryTable(out io.Writer, document evidence.Document) {
+func (o progressObserver) OnPartialExport(_ context.Context, format string, findings int, reason string) {
+	o.logger.Warn().
+		Str("format", format).
+		Int("findings", findings).
+		Str("reason", reason).
+		Msg("partial export")
+}
+
+func renderSummaryTable(out io.Writer, result ingest.Result) {
 	if out == nil {
 		return
 	}
-
-	bySeverity := map[evidence.SeverityLabel]map[evidence.Kind]int{
-		evidence.SeverityCritical: {},
-		evidence.SeverityHigh:     {},
-		evidence.SeverityMedium:   {},
-		evidence.SeverityLow:      {},
-		evidence.SeverityInfo:     {},
-	}
-
-	for _, finding := range document.Findings {
-		label := finding.Severity.Label
-		if _, ok := bySeverity[label]; !ok {
-			bySeverity[label] = make(map[evidence.Kind]int)
-		}
-		bySeverity[label][finding.Kind]++
-	}
+	bySeverity := result.Counts
 
 	kinds := []evidence.Kind{
 		evidence.KindSCA,
@@ -456,24 +525,21 @@ func renderSummaryTable(out io.Writer, document evidence.Document) {
 	}
 
 	_, _ = fmt.Fprintf(tw, "TOTAL\t%d\t%d\t%d\t%d\t%d\t%d\n",
-		len(document.Findings),
-		totalByKind(document.Findings, evidence.KindSCA),
-		totalByKind(document.Findings, evidence.KindSAST),
-		totalByKind(document.Findings, evidence.KindDAST),
-		totalByKind(document.Findings, evidence.KindCloud),
-		totalByKind(document.Findings, evidence.KindSecrets),
+		result.Document.Summary.UniqueFindings,
+		totalByKindCounts(result.Counts, evidence.KindSCA),
+		totalByKindCounts(result.Counts, evidence.KindSAST),
+		totalByKindCounts(result.Counts, evidence.KindDAST),
+		totalByKindCounts(result.Counts, evidence.KindCloud),
+		totalByKindCounts(result.Counts, evidence.KindSecrets),
 	)
 	_ = tw.Flush()
 }
 
-func totalByKind(findings []evidence.Finding, kind evidence.Kind) int {
+func totalByKindCounts(counts map[evidence.SeverityLabel]map[evidence.Kind]int, kind evidence.Kind) int {
 	total := 0
-	for _, finding := range findings {
-		if finding.Kind == kind {
-			total++
-		}
+	for _, byKind := range counts {
+		total += byKind[kind]
 	}
-
 	return total
 }
 

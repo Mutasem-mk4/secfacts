@@ -1,9 +1,11 @@
 package asff
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -41,18 +43,66 @@ func (Exporter) Export(ctx context.Context, req ports.ExportRequest) error {
 		return err
 	}
 
-	findings := make([]finding, 0, len(req.Document.Findings))
-	for _, item := range req.Document.Findings {
-		findings = append(findings, mapFinding(config, req.Document, item))
+	iterator := req.Findings
+	if iterator == nil {
+		iterator = ports.NewSliceFindingIterator(req.Document.Findings)
 	}
+	defer iterator.Close()
 
-	encoder := json.NewEncoder(req.Writer)
 	if req.Options.Pretty {
+		findings := make([]finding, 0, len(req.Document.Findings))
+		for {
+			item, err := iterator.Next(ctx)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "iterate findings")
+			}
+			findings = append(findings, mapFinding(config, req.Document, item))
+		}
+
+		encoder := json.NewEncoder(req.Writer)
 		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(findings); err != nil {
+			return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "encode ASFF findings")
+		}
+		return nil
 	}
 
-	if err := encoder.Encode(findings); err != nil {
-		return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "encode ASFF findings")
+	writer := bufio.NewWriter(req.Writer)
+	defer writer.Flush()
+
+	if _, err := writer.WriteString("["); err != nil {
+		return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "start ASFF findings")
+	}
+
+	first := true
+	for {
+		item, err := iterator.Next(ctx)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "iterate findings")
+		}
+
+		payload, err := json.Marshal(mapFinding(config, req.Document, item))
+		if err != nil {
+			return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "marshal ASFF finding")
+		}
+		if !first {
+			if _, err := writer.WriteString(","); err != nil {
+				return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "write ASFF delimiter")
+			}
+		}
+		first = false
+		if _, err := writer.Write(payload); err != nil {
+			return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "write ASFF finding")
+		}
+	}
+	if _, err := writer.WriteString("]\n"); err != nil {
+		return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "finalize ASFF findings")
 	}
 
 	return nil

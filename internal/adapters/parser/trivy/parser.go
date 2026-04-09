@@ -1,7 +1,7 @@
 package trivy
 
 import (
-	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
@@ -14,6 +14,12 @@ import (
 )
 
 const opParse = "trivy.Parser.Parse"
+const opHydrate = "trivy.Parser.Hydrate"
+
+const (
+	hydrateVulnerability = "trivy:vulnerability"
+	hydrateSecret        = "trivy:secret"
+)
 
 type Parser struct{}
 
@@ -27,6 +33,12 @@ type report struct {
 type reportMetadata struct {
 	ImageID string `json:"ImageID"`
 	DiffID  string `json:"DiffID"`
+}
+
+type reportContext struct {
+	ArtifactName string         `json:"ArtifactName"`
+	ArtifactType string         `json:"ArtifactType"`
+	Metadata     reportMetadata `json:"Metadata"`
 }
 
 type result struct {
@@ -83,55 +95,215 @@ func (Parser) Supports(filename string) bool {
 }
 
 func (Parser) Parse(ctx context.Context, req ports.ParseRequest, sink ports.FindingSink) error {
-	reader := bufio.NewReader(req.Reader)
-	peek, err := reader.Peek(1)
+	decoder := json.NewDecoder(req.Reader)
+
+	token, err := decoder.Token()
 	if err != nil {
 		if err == io.EOF {
 			return nil
 		}
-
-		return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "peek opening token")
+		return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read trivy opening token")
 	}
-	if len(peek) == 0 || peek[0] != '{' {
+	delim, ok := token.(json.Delim)
+	if !ok || delim != '{' {
 		return sferr.New(sferr.CodeUnsupportedInput, opParse, "trivy report must be a JSON object")
 	}
 
-	decoder := json.NewDecoder(reader)
-	var doc report
-	if err := decoder.Decode(&doc); err != nil {
-		return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode trivy report")
-	}
-
-	if len(doc.Results) == 0 {
-		return sferr.New(sferr.CodeUnsupportedInput, opParse, "trivy report results are missing")
-	}
-
+	doc := report{}
+	sawResults := false
 	supported := false
-	for _, result := range doc.Results {
+
+	for decoder.More() {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 
-		for _, item := range result.Vulnerabilities {
-			supported = true
-			if err := sink.WriteFinding(ctx, mapVulnerability(req, doc, result, item)); err != nil {
-				return err
-			}
+		keyToken, err := decoder.Token()
+		if err != nil {
+			return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode trivy key")
+		}
+		key, ok := keyToken.(string)
+		if !ok {
+			return sferr.New(sferr.CodeParseFailed, opParse, "trivy key is not a string")
 		}
 
-		for _, item := range result.Secrets {
-			supported = true
-			if err := sink.WriteFinding(ctx, mapSecret(req, doc, result, item)); err != nil {
+		switch key {
+		case "ArtifactName":
+			if err := decoder.Decode(&doc.ArtifactName); err != nil {
+				return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode artifact name")
+			}
+		case "ArtifactType":
+			if err := decoder.Decode(&doc.ArtifactType); err != nil {
+				return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode artifact type")
+			}
+		case "Metadata":
+			if err := decoder.Decode(&doc.Metadata); err != nil {
+				return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode metadata")
+			}
+		case "Results":
+			sawResults = true
+			ok, err := streamResults(ctx, decoder, req, sink, doc, &supported)
+			if err != nil {
 				return err
+			}
+			if !ok {
+				return sferr.New(sferr.CodeParseFailed, opParse, "trivy results field must be an array")
+			}
+		default:
+			var discard json.RawMessage
+			if err := decoder.Decode(&discard); err != nil {
+				return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "discard trivy field")
 			}
 		}
 	}
 
+	if _, err := decoder.Token(); err != nil {
+		return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read trivy closing token")
+	}
+	if !sawResults {
+		return sferr.New(sferr.CodeUnsupportedInput, opParse, "trivy report results are missing")
+	}
 	if !supported {
 		return sferr.New(sferr.CodeUnsupportedInput, opParse, "trivy report contains no supported finding types")
 	}
 
 	return nil
+}
+
+func (Parser) Hydrate(ctx context.Context, req ports.HydrateRequest) (evidence.Finding, error) {
+	if err := ctx.Err(); err != nil {
+		return evidence.Finding{}, err
+	}
+	if req.Meta.Range.Len() <= 0 {
+		return evidence.Finding{}, sferr.New(sferr.CodeParseFailed, opHydrate, "trivy result range is empty")
+	}
+
+	section := io.NewSectionReader(req.Reader, req.Meta.Range.Start, req.Meta.Range.Len())
+	rawResult, err := io.ReadAll(section)
+	if err != nil {
+		return evidence.Finding{}, sferr.Wrap(sferr.CodeIO, opHydrate, err, "read trivy result section")
+	}
+
+	var parsedResult result
+	if err := json.Unmarshal(trimHydratedJSON(rawResult), &parsedResult); err != nil {
+		return evidence.Finding{}, sferr.Wrap(sferr.CodeParseFailed, opHydrate, err, "decode trivy result section")
+	}
+
+	var header reportContext
+	if err := json.Unmarshal(req.Meta.Context, &header); err != nil {
+		return evidence.Finding{}, sferr.Wrap(sferr.CodeParseFailed, opHydrate, err, "decode trivy report context")
+	}
+
+	doc := report{
+		ArtifactName: header.ArtifactName,
+		ArtifactType: header.ArtifactType,
+		Metadata:     header.Metadata,
+	}
+
+	switch req.Meta.Hint {
+	case hydrateVulnerability:
+		if req.Meta.Index < 0 || req.Meta.Index >= len(parsedResult.Vulnerabilities) {
+			return evidence.Finding{}, io.EOF
+		}
+		return mapVulnerability(reqToParse(req), doc, parsedResult, parsedResult.Vulnerabilities[req.Meta.Index]), nil
+	case hydrateSecret:
+		if req.Meta.Index < 0 || req.Meta.Index >= len(parsedResult.Secrets) {
+			return evidence.Finding{}, io.EOF
+		}
+		return mapSecret(reqToParse(req), doc, parsedResult, parsedResult.Secrets[req.Meta.Index]), nil
+	default:
+		return evidence.Finding{}, sferr.New(sferr.CodeParseFailed, opHydrate, "unsupported trivy hydration target")
+	}
+}
+
+func reqToParse(req ports.HydrateRequest) ports.ParseRequest {
+	return ports.ParseRequest{
+		Source:   req.Source,
+		Filename: req.Filename,
+	}
+}
+
+func trimHydratedJSON(raw []byte) []byte {
+	trimmed := bytes.TrimLeft(raw, " \t\r\n,")
+	return bytes.TrimSpace(trimmed)
+}
+
+func streamResults(
+	ctx context.Context,
+	decoder *json.Decoder,
+	req ports.ParseRequest,
+	sink ports.FindingSink,
+	doc report,
+	supported *bool,
+) (bool, error) {
+	token, err := decoder.Token()
+	if err != nil {
+		return false, sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read trivy results token")
+	}
+	delim, ok := token.(json.Delim)
+	if !ok || delim != '[' {
+		return false, nil
+	}
+
+	contextPayload, err := json.Marshal(reportContext{
+		ArtifactName: doc.ArtifactName,
+		ArtifactType: doc.ArtifactType,
+		Metadata:     doc.Metadata,
+	})
+	if err != nil {
+		return true, sferr.Wrap(sferr.CodeParseFailed, opParse, err, "encode trivy report context")
+	}
+
+	for decoder.More() {
+		if err := ctx.Err(); err != nil {
+			return true, err
+		}
+
+		start := decoder.InputOffset()
+		var rawResult json.RawMessage
+		if err := decoder.Decode(&rawResult); err != nil {
+			return true, sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode trivy result")
+		}
+
+		var parsed result
+		if err := json.Unmarshal(rawResult, &parsed); err != nil {
+			return true, sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode trivy result payload")
+		}
+
+		meta := ports.ParseMetadata{
+			Range: evidence.ByteOffsetRange{
+				Start: start,
+				End:   decoder.InputOffset(),
+			},
+			Context: contextPayload,
+		}
+
+		for index, item := range parsed.Vulnerabilities {
+			*supported = true
+			itemMeta := meta
+			itemMeta.Hint = hydrateVulnerability
+			itemMeta.Index = index
+			if err := sink.WriteFinding(ctx, mapVulnerability(req, doc, parsed, item), itemMeta); err != nil {
+				return true, err
+			}
+		}
+
+		for index, item := range parsed.Secrets {
+			*supported = true
+			itemMeta := meta
+			itemMeta.Hint = hydrateSecret
+			itemMeta.Index = index
+			if err := sink.WriteFinding(ctx, mapSecret(req, doc, parsed, item), itemMeta); err != nil {
+				return true, err
+			}
+		}
+	}
+
+	if _, err := decoder.Token(); err != nil {
+		return true, sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read trivy results closing token")
+	}
+
+	return true, nil
 }
 
 func mapVulnerability(req ports.ParseRequest, doc report, result result, item vulnerability) evidence.Finding {

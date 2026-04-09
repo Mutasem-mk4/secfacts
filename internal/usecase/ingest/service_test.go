@@ -115,7 +115,7 @@ func (p benchmarkParser) Parse(ctx context.Context, req ports.ParseRequest, sink
 		return io.ErrUnexpectedEOF
 	}
 
-	for decoder.More() {
+	for index := 0; decoder.More(); index++ {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
@@ -130,13 +130,49 @@ func (p benchmarkParser) Parse(ctx context.Context, req ports.ParseRequest, sink
 		finding.Source.Scanner = req.Source.ToolName
 		finding.Source.ScannerVersion = req.Source.ToolVersion
 
-		if err := sink.WriteFinding(ctx, finding); err != nil {
+		if err := sink.WriteFinding(ctx, finding, ports.ParseMetadata{Index: index}); err != nil {
 			return err
 		}
 	}
 
 	_, err = decoder.Token()
 	return err
+}
+
+func (p benchmarkParser) Hydrate(ctx context.Context, req ports.HydrateRequest) (evidence.Finding, error) {
+	decoder := json.NewDecoder(bytes.NewReader(p.dataset))
+
+	token, err := decoder.Token()
+	if err != nil {
+		return evidence.Finding{}, err
+	}
+
+	delim, ok := token.(json.Delim)
+	if !ok || delim != '[' {
+		return evidence.Finding{}, io.ErrUnexpectedEOF
+	}
+
+	for i := 0; decoder.More(); i++ {
+		if err := ctx.Err(); err != nil {
+			return evidence.Finding{}, err
+		}
+
+		var finding evidence.Finding
+		if err := decoder.Decode(&finding); err != nil {
+			return evidence.Finding{}, err
+		}
+		if i != req.Meta.Index {
+			continue
+		}
+
+		finding.SchemaVersion = evidence.SchemaVersion
+		finding.Source.Provider = req.Source.Provider
+		finding.Source.Scanner = req.Source.ToolName
+		finding.Source.ScannerVersion = req.Source.ToolVersion
+		return finding, nil
+	}
+
+	return evidence.Finding{}, io.EOF
 }
 
 var (

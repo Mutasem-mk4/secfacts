@@ -52,6 +52,6 @@ func LoadIEMJSON(ctx context.Context, path string, parser ports.Parser) (evidenc
 
 type sinkFunc func(context.Context, evidence.Finding) error
 
-func (f sinkFunc) WriteFinding(ctx context.Context, finding evidence.Finding) error {
+func (f sinkFunc) WriteFinding(ctx context.Context, finding evidence.Finding, _ ports.ParseMetadata) error {
 	return f(ctx, finding)
 }

@@ -1,8 +1,10 @@
 package sarif
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
+	"io"
 
 	sferr "github.com/secfacts/secfacts/internal/domain/errors"
 	"github.com/secfacts/secfacts/internal/domain/evidence"
@@ -31,14 +33,89 @@ func (Exporter) Export(ctx context.Context, req ports.ExportRequest) error {
 	}
 
 	report := fromDocument(req.Document)
+	iterator := req.Findings
+	if iterator == nil {
+		iterator = ports.NewSliceFindingIterator(req.Document.Findings)
+	}
+	defer iterator.Close()
 
-	encoder := json.NewEncoder(req.Writer)
-	if req.Options.Pretty {
-		encoder.SetIndent("", "  ")
+	writer := bufio.NewWriter(req.Writer)
+	defer writer.Flush()
+
+	if _, err := writer.WriteString(`{"version":"` + version + `","$schema":"` + schemaURI + `","runs":[{"results":[`); err != nil {
+		return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "start SARIF report")
 	}
 
-	if err := encoder.Encode(report); err != nil {
-		return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "encode SARIF report")
+	rules := make(map[string]reportingDescriptor)
+	first := true
+	for {
+		finding, err := iterator.Next(ctx)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "iterate findings")
+		}
+		if finding.Rule.ID != "" {
+			rules[finding.Rule.ID] = reportingDescriptor{
+				ID:   finding.Rule.ID,
+				Name: finding.Rule.Name,
+				ShortDescription: message{
+					Text: finding.Title,
+				},
+			}
+		}
+
+		payload, err := json.Marshal(result{
+			RuleID:    finding.Rule.ID,
+			Level:     sarifLevel(finding.Severity),
+			Message:   message{Text: finding.Title},
+			Locations: buildLocations(finding),
+			PartialFingerprints: map[string]string{
+				"dedupKey":       finding.Identity.DedupKey.String(),
+				"fingerprintV1":  finding.Identity.FingerprintV1.String(),
+				"naturalKeyHash": finding.Identity.NaturalKey.String(),
+			},
+			Properties: map[string]any{
+				"kind":           finding.Kind,
+				"severity_score": finding.Severity.Score,
+				"provider":       finding.Source.Provider,
+			},
+		})
+		if err != nil {
+			return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "marshal SARIF result")
+		}
+		if !first {
+			if _, err := writer.WriteString(","); err != nil {
+				return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "write SARIF delimiter")
+			}
+		}
+		first = false
+		if _, err := writer.Write(payload); err != nil {
+			return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "write SARIF result")
+		}
+	}
+
+	descriptors := make([]reportingDescriptor, 0, len(rules))
+	for _, descriptor := range rules {
+		descriptors = append(descriptors, descriptor)
+	}
+	driverPayload, err := json.Marshal(driver{
+		Name:    report.Runs[0].Tool.Driver.Name,
+		Version: report.Runs[0].Tool.Driver.Version,
+		Rules:   descriptors,
+	})
+	if err != nil {
+		return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "marshal SARIF driver")
+	}
+	if _, err := writer.WriteString(`],"tool":{"driver":`); err != nil {
+		return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "write SARIF tool key")
+	}
+	if _, err := writer.Write(driverPayload); err != nil {
+		return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "write SARIF driver")
+	}
+	if _, err := writer.WriteString(`}}]}` + "\n"); err != nil {
+		return sferr.Wrap(sferr.CodeExportFailed, opExport, err, "finalize SARIF report")
 	}
 
 	return nil

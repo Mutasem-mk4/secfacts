@@ -31,3 +31,31 @@ type Exporter interface {
 	// Export formats and writes the issues to the io.Writer.
 	Export(ctx context.Context, w io.Writer, issues []domain.Issue) error
 }
+
+// Publisher defines the interface for sending evidence to a message broker.
+type Publisher interface {
+	// Publish sends evidence to the broker, sharding it based on its deterministic ID.
+	Publish(ctx context.Context, ev domain.Evidence) error
+}
+
+// Subscriber defines the interface for receiving evidence from a message broker.
+type Subscriber interface {
+	// Subscribe returns a channel of evidence for the assigned shards.
+	Subscribe(ctx context.Context, shards []int) (<-chan domain.Evidence, <-chan error)
+}
+
+// RemediationProvider defines the interface for LLM backends (OpenAI, Anthropic, Ollama).
+type RemediationProvider interface {
+	// Name returns the provider identifier.
+	Name() string
+	// SuggestFix requests a remediation proposal from the AI backend.
+	SuggestFix(ctx context.Context, issue domain.Issue) (*domain.RemediationProposal, error)
+}
+
+// RemediationService defines the orchestration logic for generating and applying fixes.
+type RemediationService interface {
+	// AnalyzeIssue prepares the context and calls the provider to get a fix.
+	AnalyzeIssue(ctx context.Context, issue domain.Issue) (*domain.RemediationProposal, error)
+	// ApplyFix executes the suggested code changes if the user confirms.
+	ApplyFix(ctx context.Context, proposal domain.RemediationProposal) error
+}

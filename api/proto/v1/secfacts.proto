@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package secfacts.v1;
+
+option go_package = "github.com/secfacts/secfacts/api/proto/v1;secfactsv1";
+
+import "google/protobuf/timestamp.proto";
+
+// FindingType categorizes the security finding.
+enum FindingType {
+  FINDING_TYPE_UNSPECIFIED = 0;
+  FINDING_TYPE_SAST = 1;
+  FINDING_TYPE_DAST = 2;
+  FINDING_TYPE_SCA = 3;
+  FINDING_TYPE_CLOUD = 4;
+  FINDING_TYPE_SECRETS = 5;
+}
+
+// Severity represents a canonical 0.0-10.0 scale for cross-tool mapping.
+message Severity {
+  float score = 1;
+  string label = 2;
+  string vector = 3;
+}
+
+// Vulnerability provides detailed metadata about the identified threat.
+message Vulnerability {
+  string id = 1;
+  string description = 2;
+  repeated string cwe = 3;
+  repeated string aliases = 4;
+}
+
+// Location pinpoint the finding in the target resource.
+message Location {
+  string path = 1;
+  int32 start_line = 2;
+  int32 start_col = 3;
+  int32 end_line = 4;
+  int32 end_col = 5;
+  string snippet = 6;
+}
+
+// Resource identifies the affected component.
+message Resource {
+  string uri = 1;
+  string name = 2;
+  string version = 3;
+  string type = 4;
+}
+
+// Evidence is the core IEM struct for secfacts normalization.
+message Evidence {
+  string id = 1;
+  string provider = 2;
+  FindingType type = 3;
+  Vulnerability vulnerability = 4;
+  Resource resource = 5;
+  Location location = 6;
+  Severity severity = 7;
+  map<string, string> details = 8;
+  google.protobuf.Timestamp timestamp = 9;
+}
+
+// IngestRequest sends a stream of evidence from a runner.
+message IngestRequest {
+  Evidence evidence = 1;
+}
+
+// IngestResponse acknowledges the receipt of evidence.
+message IngestResponse {
+  string id = 1;
+  bool accepted = 2;
+}
+
+// IngressService handles the streaming ingestion of security findings.
+service IngressService {
+  // IngestStream receives a stream of Evidence from a runner and returns an acknowledgment stream.
+  rpc IngestStream(stream IngestRequest) returns (stream IngestResponse);
+}

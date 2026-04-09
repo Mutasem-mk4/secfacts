@@ -15,7 +15,7 @@ func NewLogger(cfg Config) zerolog.Logger {
 		level = zerolog.InfoLevel
 	}
 
-	writer := selectWriter(cfg.LogFormat, os.Stdout)
+	writer := selectWriter(cfg.LogFormat, os.Stderr)
 	logger := zerolog.New(writer).Level(level).With().Timestamp().Logger()
 
 	return logger

@@ -1,6 +1,7 @@
 package trivy
 
 import (
+	"bytes"
 	"context"
 	"strings"
 	"testing"
@@ -92,8 +93,99 @@ func TestParserParsesVulnerabilitiesAndSecrets(t *testing.T) {
 	}
 }
 
+func TestParserHydratesResultRanges(t *testing.T) {
+	t.Parallel()
+
+	input := `{
+  "ArtifactName": "alpine:3.19",
+  "ArtifactType": "container_image",
+  "Metadata": {
+    "ImageID": "sha256:deadbeef"
+  },
+  "Results": [
+    {
+      "Target": "alpine:3.19 (alpine 3.19.1)",
+      "Class": "os-pkgs",
+      "Type": "alpine",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2024-0001",
+          "PkgName": "openssl",
+          "InstalledVersion": "1.0.2",
+          "Severity": "HIGH",
+          "Title": "OpenSSL vulnerability"
+        }
+      ]
+    },
+    {
+      "Target": "app/config/.env",
+      "Class": "secret",
+      "Secrets": [
+        {
+          "RuleID": "aws-access-key-id",
+          "Category": "AWS",
+          "Severity": "CRITICAL",
+          "Title": "AWS secret detected",
+          "Match": "AKIA1234567890TEST",
+          "StartLine": 12,
+          "EndLine": 12
+        }
+      ]
+    }
+  ]
+}`
+
+	parser := Parser{}
+	type record struct {
+		finding evidence.Finding
+		meta    ports.ParseMetadata
+	}
+	records := make([]record, 0, 2)
+
+	err := parser.Parse(context.Background(), ports.ParseRequest{
+		Filename: "trivy-report.json",
+		Reader:   strings.NewReader(input),
+		Source: evidence.SourceDescriptor{
+			Provider:    "trivy",
+			ToolName:    "trivy",
+			ToolVersion: "0.50.0",
+		},
+	}, sinkWithMetaFunc(func(_ context.Context, finding evidence.Finding, meta ports.ParseMetadata) error {
+		records = append(records, record{finding: finding, meta: meta})
+		return nil
+	}))
+	if err != nil {
+		t.Fatalf("Parse returned error: %v", err)
+	}
+
+	for _, item := range records {
+		hydrated, err := parser.Hydrate(context.Background(), ports.HydrateRequest{
+			Filename: "trivy-report.json",
+			Reader:   bytes.NewReader([]byte(input)),
+			Source: evidence.SourceDescriptor{
+				Provider:    "trivy",
+				ToolName:    "trivy",
+				ToolVersion: "0.50.0",
+			},
+			Meta: item.meta,
+		})
+		if err != nil {
+			t.Fatalf("Hydrate returned error: %v", err)
+		}
+		if hydrated.Title != item.finding.Title {
+			t.Fatalf("expected title %q, got %q", item.finding.Title, hydrated.Title)
+		}
+	}
+}
+
 type sinkFunc func(context.Context, evidence.Finding) error
 
-func (f sinkFunc) WriteFinding(ctx context.Context, finding evidence.Finding) error {
+func (f sinkFunc) WriteFinding(ctx context.Context, finding evidence.Finding, _ ports.ParseMetadata) error {
 	return f(ctx, finding)
+}
+
+type sinkWithMetaFunc func(context.Context, evidence.Finding, ports.ParseMetadata) error
+
+func (f sinkWithMetaFunc) WriteFinding(ctx context.Context, finding evidence.Finding, meta ports.ParseMetadata) error {
+	return f(ctx, finding, meta)
 }
