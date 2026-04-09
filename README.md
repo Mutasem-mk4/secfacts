@@ -1,10 +1,10 @@
 # Axon v1.0.0
 > **The Neural Backbone of High-Velocity Security Pipelines.**
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/axon/axon)](https://goreportcard.com/report/github.com/axon/axon)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Mutasem-mk4/secfacts)](https://goreportcard.com/report/github.com/Mutasem-mk4/secfacts)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Stability: Stable](https://img.shields.io/badge/Stability-Stable-green.svg)](#)
-[![Version](https://img.shields.io/badge/Version-v1.0.0-blue.svg)](https://github.com/axon/axon/releases)
+[![Version](https://img.shields.io/badge/Version-v1.0.0-blue.svg)](https://github.com/Mutasem-mk4/secfacts/releases)
 
 ---
 
@@ -88,4 +88,4 @@ Control the neural flow via environment variables or flags.
 ### **Standardize Your Pipeline**
 Axon is the standard for high-velocity security engineering. Stop managing files. Start managing security.
 
-**[Download Axon v1.0.0](https://github.com/axon/axon/releases)** | **[Read the White Paper](WHITE_PAPER.md)** | **[Contributing](CONTRIBUTING.md)** | **[Support the Project](https://www.buymeacoffee.com/MutasemMk4)**
+**[Download Axon v1.0.0](https://github.com/Mutasem-mk4/secfacts/releases)** | **[Read the White Paper](WHITE_PAPER.md)** | **[Contributing](CONTRIBUTING.md)** | **[Support the Project](https://www.buymeacoffee.com/MutasemMk4)**

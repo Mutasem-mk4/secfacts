@@ -5,7 +5,7 @@
 ### Hacker News (Show HN)
 **Title:** Show HN: axon – High-performance security correlation in Go
 **Content:**
-I built **axon** (https://github.com/axon/axon) because I was tired of CI/CD pipelines crashing or hanging when parsing 2GB+ SARIF files from tools like Trivy and Grype. 
+I built **axon** (https://github.com/Mutasem-mk4/secfacts) because I was tired of CI/CD pipelines crashing or hanging when parsing 2GB+ SARIF files from tools like Trivy and Grype. 
 
 Most aggregators unmarshal the entire report into memory, which is a non-starter for large-scale security data. `axon` uses **Zero-Copy Streaming** (via `encoding/json` decoders) and a **Sharded Actor Model** to process findings at lightning speed.
 
@@ -34,7 +34,7 @@ I built `axon` to fix this. It’s a CLI utility that:
 It’s written in Go, ultra-fast, and handles massive SARIF files without breaking a sweat.
 
 Give it a spin: `axon scan -i report.sarif -o summary.md`
-Check out the repo: https://github.com/axon/axon
+Check out the repo: https://github.com/Mutasem-mk4/secfacts
 
 ---
 
@@ -47,7 +47,7 @@ Hi [Name],
 
 I’ve been following [Newsletter Name] for a while and love the focus on actionable security engineering.
 
-I recently released **axon** (https://github.com/axon/axon), a high-performance engine in Go designed to solve the "Alert Fatigue" problem in DevSecOps pipelines. 
+I recently released **axon** (https://github.com/Mutasem-mk4/secfacts), a high-performance engine in Go designed to solve the "Alert Fatigue" problem in DevSecOps pipelines. 
 
 Unlike traditional aggregators, it uses a **Sharded Actor Model** to deduplicate and correlate thousands of raw findings into a handful of prioritized logical issues. It’s zero-copy, streaming-native, and designed specifically for the high-volume SARIF files produced by modern scanners.
 

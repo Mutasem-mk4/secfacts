@@ -1,7 +1,7 @@
 class Axon < Formula
   desc "High-performance security evidence normalization & correlation engine"
-  homepage "https://github.com/axon/axon"
-  url "https://github.com/axon/axon/archive/refs/tags/v1.0.0.tar.gz"
+  homepage "https://github.com/Mutasem-mk4/secfacts"
+  url "https://github.com/Mutasem-mk4/secfacts/archive/refs/tags/v1.0.0.tar.gz"
   sha256 "REPLACE_WITH_ACTUAL_SHA256" # Use `brew fetch --head axon` to get this
   license "Apache-2.0"
 

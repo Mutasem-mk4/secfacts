@@ -6,7 +6,7 @@
 **Draft:**
 I’ve spent the last few years dealing with "Alert Fatigue" in DevSecOps pipelines. Scanners like Trivy, Gitleaks, and Checkov are great, but they often produce thousands of redundant findings that bury the actual root cause.
 
-To solve this, I built **axon** (https://github.com/axon/axon). It's a normalization engine written in Go that uses a **Sharded Actor Model** to deduplicate and correlate security evidence with near-zero overhead.
+To solve this, I built **axon** (https://github.com/Mutasem-mk4/secfacts). It's a normalization engine written in Go that uses a **Sharded Actor Model** to deduplicate and correlate security evidence with near-zero overhead.
 
 **Technical Highlights:**
 - **Zero-Copy Ingestion:** Uses `encoding/json` stream decoders to process multi-gigabyte SARIF files without memory spikes.
@@ -27,7 +27,7 @@ We chose Go specifically for its concurrency primitives. We’re using a sharded
 
 **We need your help with Stress Testing!** If you have massive (1GB+) SARIF files, try running them through `axon` and let us know how the memory footprint holds up.
 
-Check it out: https://github.com/axon/axon
+Check it out: https://github.com/Mutasem-mk4/secfacts
 
 ---
 
@@ -64,14 +64,14 @@ STOP triaging noise. START fixing root causes. 🛑
 - 1 Secret Revocation
 
 High-performance security correlation in Go. 🚀
-https://github.com/axon/axon #DevSecOps #Golang #CyberSecurity
+https://github.com/Mutasem-mk4/secfacts #DevSecOps #Golang #CyberSecurity
 
 **Post 2: Call to Contributors**
 We built the engine. Now we need the fuel. ⛽
 
 `axon` v0.1.0 is out with a high-speed SARIF parser. We're looking for contributors to help us expand our **Parser Registry**. Want to add support for Snyk, SonarQube, or ZAP? 
 
-Our Interface-based Provider pattern makes it easy to add new adapters. Join us: https://github.com/axon/axon #OpenSource #InfoSec
+Our Interface-based Provider pattern makes it easy to add new adapters. Join us: https://github.com/Mutasem-mk4/secfacts #OpenSource #InfoSec
 
 ---
 
