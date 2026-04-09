@@ -10,16 +10,16 @@ import (
 	"strings"
 	"time"
 
-	sferr "github.com/secfacts/secfacts/internal/domain/errors"
-	"github.com/secfacts/secfacts/internal/domain/evidence"
-	"github.com/secfacts/secfacts/internal/ports"
+	sferr "github.com/axon/axon/internal/domain/errors"
+	"github.com/axon/axon/internal/domain/evidence"
+	"github.com/axon/axon/internal/ports"
 )
 
 const (
 	format             = "asff"
 	schemaVersion      = "2018-10-08"
 	defaultAwsRegion   = "us-east-1"
-	productName        = "secfacts"
+	productName        = "axon"
 	opExport           = "asff.Exporter.Export"
 	opValidateDocument = "asff.Exporter.validate"
 )
@@ -158,22 +158,22 @@ type findingProviderFields struct {
 func resolveConfig(options ports.ExportOptions, document evidence.Document) config {
 	accountID := firstNonEmpty(
 		options.AWSAccountID,
-		os.Getenv("SECFACTS_AWS_ACCOUNT_ID"),
+		os.Getenv("AXON_AWS_ACCOUNT_ID"),
 		inferAWSAccountID(document),
 	)
 	region := firstNonEmpty(
 		options.AWSRegion,
-		os.Getenv("SECFACTS_AWS_REGION"),
+		os.Getenv("AXON_AWS_REGION"),
 		defaultAwsRegion,
 	)
 	productARN := firstNonEmpty(
 		options.ProductARN,
-		os.Getenv("SECFACTS_AWS_PRODUCT_ARN"),
+		os.Getenv("AXON_AWS_PRODUCT_ARN"),
 		fmt.Sprintf("arn:aws:securityhub:%s:%s:product/%s/default", region, accountID, accountID),
 	)
 	generatorID := firstNonEmpty(
 		options.GeneratorID,
-		os.Getenv("SECFACTS_AWS_GENERATOR_ID"),
+		os.Getenv("AXON_AWS_GENERATOR_ID"),
 		document.Source.ToolName,
 		productName,
 	)
@@ -250,11 +250,11 @@ func mapFinding(cfg config, document evidence.Document, item evidence.Finding) f
 			Types:    types,
 		},
 		ProductFields: map[string]string{
-			"secfacts/fingerprint_v1": item.Identity.FingerprintV1.String(),
-			"secfacts/dedup_key":      item.Identity.DedupKey.String(),
-			"secfacts/natural_key":    item.Identity.NaturalKey.String(),
-			"secfacts/kind":           string(item.Kind),
-			"secfacts/provider":       item.Source.Provider,
+			"axon/fingerprint_v1": item.Identity.FingerprintV1.String(),
+			"axon/dedup_key":      item.Identity.DedupKey.String(),
+			"axon/natural_key":    item.Identity.NaturalKey.String(),
+			"axon/kind":           string(item.Kind),
+			"axon/provider":       item.Source.Provider,
 		},
 		Confidence: confidenceValue(item.Confidence),
 	}
@@ -297,11 +297,11 @@ func asffSeverityLabel(label evidence.SeverityLabel) string {
 func findingID(item evidence.Finding) string {
 	switch {
 	case !item.Identity.FingerprintV1.IsZero():
-		return "urn:secfacts:finding:" + item.Identity.FingerprintV1.String()
+		return "urn:axon:finding:" + item.Identity.FingerprintV1.String()
 	case strings.TrimSpace(item.ID) != "":
-		return "urn:secfacts:finding:" + strings.ToLower(strings.TrimSpace(item.ID))
+		return "urn:axon:finding:" + strings.ToLower(strings.TrimSpace(item.ID))
 	default:
-		return "urn:secfacts:finding:unknown"
+		return "urn:axon:finding:unknown"
 	}
 }
 
@@ -341,7 +341,7 @@ func mapResources(cfg config, item evidence.Finding) []resource {
 	if len(resources) == 0 {
 		resources = append(resources, resource{
 			Type:   "Other",
-			Id:     firstNonEmpty(item.PrimaryLocation.URI, item.ID, item.Identity.FingerprintV1.String(), "secfacts:finding"),
+			Id:     firstNonEmpty(item.PrimaryLocation.URI, item.ID, item.Identity.FingerprintV1.String(), "axon:finding"),
 			Region: cfg.awsRegion,
 		})
 	}

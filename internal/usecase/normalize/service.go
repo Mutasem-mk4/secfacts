@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	sferr "github.com/secfacts/secfacts/internal/domain/errors"
-	"github.com/secfacts/secfacts/internal/domain/evidence"
+	sferr "github.com/axon/axon/internal/domain/errors"
+	"github.com/axon/axon/internal/domain/evidence"
 )
 
 const opNormalize = "normalize.Service.Normalize"

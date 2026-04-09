@@ -1,0 +1,77 @@
+.TH AXON 1 "April 2026" "Axon" "User Commands"
+.SH NAME
+axon \- streaming security evidence normalization and export CLI
+.SH SYNOPSIS
+.B axon
+[\fIGLOBAL OPTIONS\fR]
+.I COMMAND
+[\fICOMMAND OPTIONS\fR]
+[\fIARGUMENTS\fR]
+.SH DESCRIPTION
+Axon ingests security scanner output, normalizes findings into a canonical
+evidence model, deduplicates and correlates related findings, and exports the
+result in machine-consumable formats such as JSON, SARIF, and AWS ASFF.
+.PP
+The current ingest architecture uses two passes. Pass 1 streams and records
+compact metadata. Pass 2 rehydrates only selected findings by byte offset,
+which reduces memory retention during export.
+.SH COMMANDS
+.TP
+.B normalize
+Normalize one or more reports into the internal evidence model.
+.TP
+.B ingest
+Alias for
+.BR normalize .
+.TP
+.B completion
+Generate shell completion scripts for bash, zsh, or fish.
+.TP
+.B serve
+Start the gRPC ingress server.
+.TP
+.B worker
+Start worker mode for the distributed ingestion path.
+.SH EXAMPLES
+.TP
+Normalize a report to JSON on stdout:
+.B axon normalize report.json
+.TP
+Read input from stdin:
+.B cat trivy.json | axon ingest \-
+.TP
+Write SARIF output to a file:
+.B axon normalize --format sarif --output findings.sarif report.json
+.TP
+Run with a policy and baseline:
+.B axon normalize --policy policy.yaml --baseline baseline.json report.json
+.SH FILES
+.TP
+.I /etc/axon/
+System configuration directory.
+.TP
+.I ~/.config/axon/
+User configuration directory.
+.TP
+.I /var/log/axon/axon.log
+Default log file path.
+.SH ENVIRONMENT
+.TP
+.B AXON_LOG_LEVEL
+Set the log level.
+.TP
+.B AXON_LOG_FORMAT
+Set the log format to console or json.
+.TP
+.B AXON_LOG_PATH
+Override the log file path.
+.TP
+.B AXON_WORKERS
+Override worker concurrency defaults.
+.TP
+.B AXON_CONFIG_PATH
+Override the discovered configuration path list.
+.SH AUTHOR
+Axon Maintainers.
+.SH LICENSE
+Apache License 2.0.

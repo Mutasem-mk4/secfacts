@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/secfacts/secfacts/internal/domain/evidence"
-	"github.com/secfacts/secfacts/internal/ports"
+	"github.com/axon/axon/internal/domain/evidence"
+	"github.com/axon/axon/internal/ports"
 )
 
 func TestExporterGolden(t *testing.T) {
@@ -21,8 +21,8 @@ func TestExporterGolden(t *testing.T) {
 		SchemaVersion: evidence.SchemaVersion,
 		GeneratedAt:   observedAt,
 		Source: evidence.SourceDescriptor{
-			Provider:    "secfacts",
-			ToolName:    "secfacts",
+			Provider:    "axon",
+			ToolName:    "axon",
 			ToolVersion: "0.1.0-test",
 		},
 		Findings: []evidence.Finding{
@@ -95,7 +95,7 @@ func TestExporterGolden(t *testing.T) {
 			AWSAccountID: "123456789012",
 			AWSRegion:    "us-east-1",
 			ProductARN:   "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
-			GeneratorID:  "secfacts/test",
+			GeneratorID:  "axon/test",
 		},
 	})
 	if err != nil {
@@ -108,8 +108,10 @@ func TestExporterGolden(t *testing.T) {
 		t.Fatalf("ReadFile returned error: %v", err)
 	}
 
-	if got := buffer.String(); got != string(expected) {
-		t.Fatalf("golden mismatch\nexpected:\n%s\ngot:\n%s", string(expected), got)
+	got := strings.TrimSpace(strings.ReplaceAll(buffer.String(), "\r\n", "\n"))
+	want := strings.TrimSpace(strings.ReplaceAll(string(expected), "\r\n", "\n"))
+	if got != want {
+		t.Fatalf("golden mismatch\nexpected:\n%s\ngot:\n%s", want, got)
 	}
 }
 

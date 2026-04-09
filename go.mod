@@ -1,4 +1,4 @@
-module github.com/secfacts/secfacts
+module github.com/axon/axon
 
 go 1.25.0
 

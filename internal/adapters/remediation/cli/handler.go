@@ -7,9 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/secfacts/secfacts/internal/core/domain"
-	"github.com/secfacts/secfacts/internal/core/ports"
-	"github.com/rs/zerolog/log"
+	"github.com/axon/axon/internal/core/domain"
+	"github.com/axon/axon/internal/core/ports"
 )
 
 // RemediationCLI handles the interactive review and apply flow.
@@ -48,15 +47,23 @@ func (c *RemediationCLI) ReviewAndApply(ctx context.Context, issue domain.Issue,
 		return nil
 	}
 
-	fmt.Printf("\nDo you want to apply this fix? Type 'YES' to confirm: ")
-	
 	reader := bufio.NewReader(os.Stdin)
-	response, _ := reader.ReadString('\n')
-	response = strings.TrimSpace(response)
+	for {
+		fmt.Printf("\nDo you want to apply this fix? [y/N]: ")
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("read response: %w", err)
+		}
+		response = strings.ToLower(strings.TrimSpace(response))
 
-	if response != "YES" {
-		fmt.Println("Remediation aborted by user.")
-		return nil
+		if response == "" || response == "n" || response == "no" {
+			fmt.Println("Remediation aborted by user.")
+			return nil
+		}
+		if response == "y" || response == "yes" {
+			break
+		}
+		fmt.Println("Invalid input. Please type 'y' to continue or 'n' to abort.")
 	}
 
 	fmt.Println("Applying fix...")

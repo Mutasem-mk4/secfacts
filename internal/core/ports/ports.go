@@ -2,7 +2,7 @@ package ports
 
 import (
 	"context"
-	"github.com/secfacts/secfacts/internal/core/domain"
+	"github.com/axon/axon/internal/core/domain"
 	"io"
 )
 

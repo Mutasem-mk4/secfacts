@@ -1,6 +1,6 @@
 package correlation
 
-import "github.com/secfacts/secfacts/internal/domain/evidence"
+import "github.com/axon/axon/internal/domain/evidence"
 
 type CompactFinding struct {
 	ID               string

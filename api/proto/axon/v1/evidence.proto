@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package secfacts.v1;
+package axon.v1;
 
-option go_package = "github.com/secfacts/secfacts/api/proto/secfacts/v1;secfactsv1";
+option go_package = "github.com/axon/axon/api/proto/axon/v1;axonv1";
 
 message Document {
   string schema_version = 1;
@@ -165,3 +165,4 @@ message RootCauseCluster {
   repeated string finding_ids = 5;
   Finding representative = 6;
 }
+

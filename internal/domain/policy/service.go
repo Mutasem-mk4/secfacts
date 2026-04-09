@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	sferr "github.com/secfacts/secfacts/internal/domain/errors"
-	"github.com/secfacts/secfacts/internal/domain/evidence"
+	sferr "github.com/axon/axon/internal/domain/errors"
+	"github.com/axon/axon/internal/domain/evidence"
 )
 
 const opEvaluate = "policy.Service.Evaluate"

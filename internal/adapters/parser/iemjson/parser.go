@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	sferr "github.com/secfacts/secfacts/internal/domain/errors"
-	"github.com/secfacts/secfacts/internal/domain/evidence"
-	"github.com/secfacts/secfacts/internal/ports"
+	sferr "github.com/axon/axon/internal/domain/errors"
+	"github.com/axon/axon/internal/domain/evidence"
+	"github.com/axon/axon/internal/ports"
 )
 
 const opParse = "iemjson.Parser.Parse"
@@ -57,7 +57,7 @@ func (Parser) Hydrate(ctx context.Context, req ports.HydrateRequest) (evidence.F
 
 	var finding evidence.Finding
 	if err := json.Unmarshal(trimmed, &finding); err != nil {
-		return evidence.Finding{}, sferr.Wrap(sferr.CodeParseFailed, opHydrate, err, "decode finding section")
+		return evidence.Finding{}, sferr.WrapJSON(sferr.CodeParseFailed, opHydrate, err, req.Reader, "decode finding section")
 	}
 
 	applySourceDefaults(&finding, req.Source)
@@ -72,7 +72,7 @@ func parseStructuredJSON(ctx context.Context, req ports.ParseRequest, sink ports
 		if err == io.EOF {
 			return nil
 		}
-		return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read opening token")
+		return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "read opening token")
 	}
 
 	delim, ok := token.(json.Delim)
@@ -99,7 +99,7 @@ func parseFindingArray(ctx context.Context, decoder *json.Decoder, req ports.Par
 		start := decoder.InputOffset()
 		var finding evidence.Finding
 		if err := decoder.Decode(&finding); err != nil {
-			return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode finding")
+			return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "decode finding")
 		}
 
 		if err := writeFinding(ctx, req, sink, finding, ports.ParseMetadata{
@@ -111,7 +111,7 @@ func parseFindingArray(ctx context.Context, decoder *json.Decoder, req ports.Par
 	}
 
 	if _, err := decoder.Token(); err != nil {
-		return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read closing token")
+		return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "read closing token")
 	}
 
 	return nil
@@ -121,7 +121,7 @@ func parseDocumentObject(ctx context.Context, decoder *json.Decoder, req ports.P
 	for decoder.More() {
 		keyToken, err := decoder.Token()
 		if err != nil {
-			return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode document key")
+			return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "decode document key")
 		}
 
 		key, ok := keyToken.(string)
@@ -132,14 +132,14 @@ func parseDocumentObject(ctx context.Context, decoder *json.Decoder, req ports.P
 		if !strings.EqualFold(key, "findings") {
 			var discard json.RawMessage
 			if err := decoder.Decode(&discard); err != nil {
-				return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "discard document field")
+				return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "discard document field")
 			}
 			continue
 		}
 
 		token, err := decoder.Token()
 		if err != nil {
-			return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read findings token")
+			return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "read findings token")
 		}
 
 		delim, ok := token.(json.Delim)
@@ -153,7 +153,7 @@ func parseDocumentObject(ctx context.Context, decoder *json.Decoder, req ports.P
 	}
 
 	if _, err := decoder.Token(); err != nil {
-		return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read document closing token")
+		return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "read document closing token")
 	}
 
 	return nil

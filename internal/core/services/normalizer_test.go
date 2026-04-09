@@ -2,8 +2,8 @@ package services_test
 
 import (
 	"context"
-	"github.com/secfacts/secfacts/internal/core/domain"
-	"github.com/secfacts/secfacts/internal/core/services"
+	"github.com/axon/axon/internal/core/domain"
+	"github.com/axon/axon/internal/core/services"
 	"testing"
 	"time"
 )

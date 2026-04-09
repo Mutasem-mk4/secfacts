@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,10 +16,30 @@ func NewLogger(cfg Config) zerolog.Logger {
 		level = zerolog.InfoLevel
 	}
 
-	writer := selectWriter(cfg.LogFormat, os.Stderr)
+	writer := selectWriter(cfg.LogFormat, combinedLogWriter(cfg.LogPath))
 	logger := zerolog.New(writer).Level(level).With().Timestamp().Logger()
 
 	return logger
+}
+
+func combinedLogWriter(logPath string) io.Writer {
+	writers := []io.Writer{os.Stderr}
+	fileWriter, err := openLogFile(logPath)
+	if err == nil {
+		writers = append(writers, fileWriter)
+	}
+	return io.MultiWriter(writers...)
+}
+
+func openLogFile(path string) (*os.File, error) {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return nil, os.ErrInvalid
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return nil, err
+	}
+	return os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 }
 
 func selectWriter(format string, out io.Writer) io.Writer {

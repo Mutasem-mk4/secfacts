@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/secfacts/secfacts/internal/app"
+	"github.com/axon/axon/internal/app"
 )
 
 func main() {

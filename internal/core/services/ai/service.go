@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
-	"github.com/secfacts/secfacts/internal/core/domain"
-	"github.com/secfacts/secfacts/internal/core/ports"
+	"github.com/axon/axon/internal/core/domain"
+	"github.com/axon/axon/internal/core/ports"
 	"github.com/rs/zerolog/log"
 )
 
@@ -29,7 +28,7 @@ func (s *Service) AnalyzeIssue(ctx context.Context, issue domain.Issue) (*domain
 	// 1. Gather Minimal Context (Zero-Copy Philosophy)
 	// We only extract what's necessary to point the AI to the problem.
 	// In a real implementation, we might read the specific line from the file if available.
-	
+
 	// 2. Delegate to Provider
 	proposal, err := s.provider.SuggestFix(ctx, issue)
 	if err != nil {
@@ -47,8 +46,8 @@ func (s *Service) ApplyFix(ctx context.Context, proposal domain.RemediationPropo
 
 	// For safety, we use 'patch' command if available, or write a temporary file.
 	// This implementation assumes a standard Unix-like environment or 'git apply'.
-	
-	tmpFile, err := os.CreateTemp("", "secfacts-fix-*.patch")
+
+	tmpFile, err := os.CreateTemp("", "axon-fix-*.patch")
 	if err != nil {
 		return fmt.Errorf("create temp patch: %w", err)
 	}
@@ -66,7 +65,7 @@ func (s *Service) ApplyFix(ctx context.Context, proposal domain.RemediationPropo
 	}
 
 	log.Info().Msg("remediation fix applied successfully")
-	
+
 	if proposal.CheckCommand != "" {
 		fmt.Printf("\n[Verification Needed] Run the following to confirm the fix:\n  %s\n", proposal.CheckCommand)
 	}

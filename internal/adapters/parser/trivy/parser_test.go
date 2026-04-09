@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/secfacts/secfacts/internal/domain/evidence"
-	"github.com/secfacts/secfacts/internal/ports"
+	"github.com/axon/axon/internal/domain/evidence"
+	"github.com/axon/axon/internal/ports"
 )
 
 func TestParserParsesVulnerabilitiesAndSecrets(t *testing.T) {

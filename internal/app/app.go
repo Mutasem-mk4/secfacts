@@ -11,28 +11,29 @@ import (
 	"syscall"
 	"text/tabwriter"
 
+	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/secfacts/secfacts/internal/adapters/baseline"
-	"github.com/secfacts/secfacts/internal/adapters/exporter/asff"
-	iemexporter "github.com/secfacts/secfacts/internal/adapters/exporter/iemjson"
-	"github.com/secfacts/secfacts/internal/adapters/exporter/sarif"
-	"github.com/secfacts/secfacts/internal/adapters/parser/iemjson"
-	"github.com/secfacts/secfacts/internal/adapters/parser/trivy"
-	policyyaml "github.com/secfacts/secfacts/internal/adapters/policy"
-	"github.com/secfacts/secfacts/internal/adapters/registry"
-	"github.com/secfacts/secfacts/internal/bootstrap"
-	"github.com/secfacts/secfacts/internal/domain/correlation"
-	"github.com/secfacts/secfacts/internal/domain/dedup"
-	sferr "github.com/secfacts/secfacts/internal/domain/errors"
-	"github.com/secfacts/secfacts/internal/domain/evidence"
-	domainpolicy "github.com/secfacts/secfacts/internal/domain/policy"
-	"github.com/secfacts/secfacts/internal/ports"
-	"github.com/secfacts/secfacts/internal/usecase/evaluate"
-	"github.com/secfacts/secfacts/internal/usecase/ingest"
-	"github.com/secfacts/secfacts/internal/usecase/normalize"
-	"github.com/secfacts/secfacts/pkg/version"
+	"github.com/axon/axon/internal/adapters/baseline"
+	"github.com/axon/axon/internal/adapters/exporter/asff"
+	iemexporter "github.com/axon/axon/internal/adapters/exporter/iemjson"
+	"github.com/axon/axon/internal/adapters/exporter/sarif"
+	"github.com/axon/axon/internal/adapters/parser/iemjson"
+	"github.com/axon/axon/internal/adapters/parser/trivy"
+	policyyaml "github.com/axon/axon/internal/adapters/policy"
+	"github.com/axon/axon/internal/adapters/registry"
+	"github.com/axon/axon/internal/bootstrap"
+	"github.com/axon/axon/internal/domain/correlation"
+	"github.com/axon/axon/internal/domain/dedup"
+	sferr "github.com/axon/axon/internal/domain/errors"
+	"github.com/axon/axon/internal/domain/evidence"
+	domainpolicy "github.com/axon/axon/internal/domain/policy"
+	"github.com/axon/axon/internal/ports"
+	"github.com/axon/axon/internal/usecase/evaluate"
+	"github.com/axon/axon/internal/usecase/ingest"
+	"github.com/axon/axon/internal/usecase/normalize"
+	"github.com/axon/axon/pkg/version"
 )
 
 func Run() int {
@@ -72,7 +73,7 @@ func newRootCommand(ctx context.Context, cfg bootstrap.Config, logger zerolog.Lo
 	}
 
 	cmd := &cobra.Command{
-		Use:           "secfacts",
+		Use:           "axon",
 		Short:         "Normalize security evidence into a canonical internal model.",
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -87,7 +88,7 @@ func newRootCommand(ctx context.Context, cfg bootstrap.Config, logger zerolog.Lo
 	cmd.PersistentFlags().String("log-format", cfg.LogFormat, "Log format: console or json")
 	cmd.PersistentFlags().Int("workers", cfg.Workers, "Maximum concurrent workers for ingestion")
 
-	cmd.AddCommand(newNormalizeCommand(cfg, logger, parserRegistry, exporterRegistry))
+	cmd.AddCommand(newIngestCommand(cfg, logger, parserRegistry, exporterRegistry))
 	cmd.AddCommand(newCompletionCommand(cmd))
 	cmd.AddCommand(newServeCommand(cfg, logger))
 	cmd.AddCommand(newWorkerCommand(cfg, logger))
@@ -95,7 +96,7 @@ func newRootCommand(ctx context.Context, cfg bootstrap.Config, logger zerolog.Lo
 	return cmd, nil
 }
 
-func newNormalizeCommand(
+func newIngestCommand(
 	cfg bootstrap.Config,
 	logger zerolog.Logger,
 	parserRegistry *registry.ParserRegistry,
@@ -118,13 +119,13 @@ func newNormalizeCommand(
 	var concurrency int
 
 	cmd := &cobra.Command{
-		Use:     "normalize <report> [report...]",
-		Aliases: []string{"ingest"},
-		Short:   "Normalize one or more security reports into the internal evidence model.",
+		Use:     "ingest <input> [input...]",
+		Aliases: []string{"normalize"},
+		Short:   "Ingest and normalize security reports (files or directories) into the internal model.",
 		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if concurrency <= 0 {
-				return sferr.New(sferr.CodeInvalidArgument, "normalize", "concurrency must be greater than zero")
+				return sferr.New(sferr.CodeInvalidArgument, "ingest", "concurrency must be greater than zero")
 			}
 
 			exporter, err := exporterRegistry.ByFormat(format)
@@ -156,7 +157,7 @@ func newNormalizeCommand(
 			for _, arg := range args {
 				if arg == "-" {
 					if usesStdin {
-						return sferr.New(sferr.CodeInvalidArgument, "normalize", "stdin can only be specified once")
+						return sferr.New(sferr.CodeInvalidArgument, "ingest", "stdin can only be specified once")
 					}
 					usesStdin = true
 					input, cleanup, err := materializeStdinInput(source)
@@ -204,7 +205,7 @@ func newNormalizeCommand(
 					Str("output", defaultOutputLabel(outputPath)).
 					Int("concurrency", concurrency).
 					Strs("inputs", args).
-					Msg("starting normalization")
+					Msg("starting ingestion")
 			}
 
 			policy, err := loadPolicy(policyPath)
@@ -258,33 +259,33 @@ func newNormalizeCommand(
 
 				if !decision.Passed {
 					renderSummaryTable(cmd.ErrOrStderr(), result)
-					return sferr.New(sferr.CodePolicyViolation, "normalize", summarizeViolations(decision.Violations))
+					return sferr.New(sferr.CodePolicyViolation, "ingest", summarizeViolations(decision.Violations))
 				}
 			}
 
 			renderSummaryTable(cmd.ErrOrStderr(), result)
 			if !quiet {
-				logger.Info().Msg("normalization completed")
+				logger.Info().Msg("ingestion completed")
 			}
 			return nil
 		},
 	}
 
-	cmd.Flags().IntVar(&concurrency, "concurrency", runtime.NumCPU(), "Worker-pool concurrency for parse and normalize stages")
+	cmd.Flags().IntVarP(&concurrency, "concurrency", "c", runtime.NumCPU(), "Concurrent workers for parsing/normalization")
 	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Write output to file instead of stdout")
-	cmd.Flags().StringVar(&format, "format", "json", "Output format: json, sarif, or asff")
-	cmd.Flags().BoolVar(&pretty, "pretty", true, "Pretty-print exported output")
-	cmd.Flags().BoolVar(&quiet, "quiet", false, "Suppress progress logs and only emit essential summary output")
-	cmd.Flags().StringVar(&provider, "provider", "secfacts", "Logical source provider for ingested findings")
-	cmd.Flags().StringVar(&toolName, "tool-name", "secfacts", "Scanner or producer name used in the source metadata")
-	cmd.Flags().StringVar(&toolVersion, "tool-version", version.Version, "Scanner or producer version used in the source metadata")
-	cmd.Flags().StringVar(&failOnSeverity, "fail-on-severity", "", "Fail if findings meet or exceed this severity: low, medium, high, critical")
-	cmd.Flags().StringVar(&baselinePath, "baseline", "", "Path to a previous secfacts IEM JSON export for incremental comparison")
-	cmd.Flags().StringVar(&policyPath, "policy", "", "Path to a YAML policy file")
-	cmd.Flags().StringVar(&awsAccountID, "aws-account-id", "", "AWS account ID for ASFF exports; falls back to SECFACTS_AWS_ACCOUNT_ID")
-	cmd.Flags().StringVar(&awsRegion, "aws-region", "", "AWS region for ASFF exports; falls back to SECFACTS_AWS_REGION")
-	cmd.Flags().StringVar(&awsProductARN, "aws-product-arn", "", "AWS Security Hub product ARN for ASFF exports; falls back to SECFACTS_AWS_PRODUCT_ARN")
-	cmd.Flags().StringVar(&awsGeneratorID, "aws-generator-id", "", "Generator ID for ASFF exports; falls back to SECFACTS_AWS_GENERATOR_ID")
+	cmd.Flags().StringVarP(&format, "format", "f", "json", "Output format: json, sarif, or asff")
+	cmd.Flags().BoolVarP(&pretty, "pretty", "p", true, "Pretty-print exported output")
+	cmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "Suppress progress logs (only emit summary)")
+	cmd.Flags().StringVar(&provider, "provider", "axon", "Logical source provider for findings")
+	cmd.Flags().StringVar(&toolName, "tool-name", "axon", "Scanner or producer name")
+	cmd.Flags().StringVar(&toolVersion, "tool-version", version.Version, "Scanner or producer version")
+	cmd.Flags().StringVarP(&failOnSeverity, "fail-on-severity", "s", "", "Fail if findings meet threshold: low, medium, high, critical")
+	cmd.Flags().StringVarP(&baselinePath, "baseline", "b", "", "Incremental comparison baseline (axon JSON)")
+	cmd.Flags().StringVarP(&policyPath, "policy", "P", "", "Path to YAML policy file")
+	cmd.Flags().StringVar(&awsAccountID, "aws-account-id", "", "AWS account ID for ASFF exports; falls back to AXON_AWS_ACCOUNT_ID")
+	cmd.Flags().StringVar(&awsRegion, "aws-region", "", "AWS region for ASFF exports; falls back to AXON_AWS_REGION")
+	cmd.Flags().StringVar(&awsProductARN, "aws-product-arn", "", "AWS Security Hub product ARN for ASFF exports; falls back to AXON_AWS_PRODUCT_ARN")
+	cmd.Flags().StringVar(&awsGeneratorID, "aws-generator-id", "", "Generator ID for ASFF exports; falls back to AXON_AWS_GENERATOR_ID")
 
 	return cmd
 }
@@ -360,27 +361,11 @@ func sourceForInput(source evidence.SourceDescriptor, path string) evidence.Sour
 }
 
 func materializeStdinInput(source evidence.SourceDescriptor) (ingest.Input, func(), error) {
-	file, err := os.CreateTemp("", "secfacts-stdin-*.json")
-	if err != nil {
-		return ingest.Input{}, nil, sferr.Wrap(sferr.CodeIO, "normalize.stdin", err, "create temporary stdin file")
-	}
-
-	if _, err := io.Copy(file, os.Stdin); err != nil {
-		_ = file.Close()
-		_ = os.Remove(file.Name())
-		return ingest.Input{}, nil, sferr.Wrap(sferr.CodeIO, "normalize.stdin", err, "copy stdin to temporary file")
-	}
-	if err := file.Close(); err != nil {
-		_ = os.Remove(file.Name())
-		return ingest.Input{}, nil, sferr.Wrap(sferr.CodeIO, "normalize.stdin", err, "close temporary stdin file")
-	}
-
 	return ingest.Input{
-			Path:   file.Name(),
-			Source: sourceForInput(source, "stdin"),
-		}, func() {
-			_ = os.Remove(file.Name())
-		}, nil
+		Path:   "stdin",
+		Source: sourceForInput(source, "stdin"),
+		Reader: io.NopCloser(os.Stdin),
+	}, func() {}, nil
 }
 
 func loadPolicy(path string) (domainpolicy.Policy, error) {
@@ -497,6 +482,11 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		evidence.SeverityInfo,
 	}
 
+	isTerminal := false
+	if f, ok := out.(*os.File); ok {
+		isTerminal = isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
+	}
+
 	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
 	_, _ = fmt.Fprintln(out, "")
 	_, _ = fmt.Fprintln(out, "Summary")
@@ -511,10 +501,16 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 			row = append(row, value)
 			total += value
 		}
+
+		severityText := strings.ToUpper(string(label))
+		if isTerminal {
+			severityText = colorizeSeverity(label, severityText)
+		}
+
 		_, _ = fmt.Fprintf(
 			tw,
 			"%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
-			strings.ToUpper(string(label)),
+			severityText,
 			total,
 			row[0],
 			row[1],
@@ -524,7 +520,13 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		)
 	}
 
-	_, _ = fmt.Fprintf(tw, "TOTAL\t%d\t%d\t%d\t%d\t%d\t%d\n",
+	totalLabel := "TOTAL"
+	if isTerminal {
+		totalLabel = "\x1b[1mTOTAL\x1b[0m"
+	}
+
+	_, _ = fmt.Fprintf(tw, "%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
+		totalLabel,
 		result.Document.Summary.UniqueFindings,
 		totalByKindCounts(result.Counts, evidence.KindSCA),
 		totalByKindCounts(result.Counts, evidence.KindSAST),
@@ -533,6 +535,31 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		totalByKindCounts(result.Counts, evidence.KindSecrets),
 	)
 	_ = tw.Flush()
+}
+
+func colorizeSeverity(label evidence.SeverityLabel, text string) string {
+	const (
+		reset     = "\x1b[0m"
+		bold      = "\x1b[1m"
+		red       = "\x1b[31m"
+		yellow    = "\x1b[33m"
+		cyan      = "\x1b[36m"
+		blue      = "\x1b[34m"
+		boldRed   = bold + red
+	)
+
+	switch label {
+	case evidence.SeverityCritical, evidence.SeverityHigh:
+		return boldRed + text + reset
+	case evidence.SeverityMedium:
+		return yellow + text + reset
+	case evidence.SeverityLow:
+		return cyan + text + reset
+	case evidence.SeverityInfo:
+		return blue + text + reset
+	default:
+		return text
+	}
 }
 
 func totalByKindCounts(counts map[evidence.SeverityLabel]map[evidence.Kind]int, kind evidence.Kind) int {

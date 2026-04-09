@@ -2,7 +2,7 @@ package evidence
 
 import "time"
 
-const SchemaVersion = "secfacts.iem/v1alpha1"
+const SchemaVersion = "axon.iem/v1alpha1"
 
 type Kind string
 

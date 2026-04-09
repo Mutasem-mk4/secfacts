@@ -1,11 +1,11 @@
 [
   {
     "SchemaVersion": "2018-10-08",
-    "Id": "urn:secfacts:finding:db0528fcc39e98c385f4e4d0b4b1b9cb7e9049c6d219a4a1f95a307a8f884954",
+    "Id": "urn:axon:finding:db0528fcc39e98c385f4e4d0b4b1b9cb7e9049c6d219a4a1f95a307a8f884954",
     "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
-    "ProductName": "secfacts",
+    "ProductName": "axon",
     "AwsAccountId": "123456789012",
-    "GeneratorId": "secfacts/cli",
+    "GeneratorId": "axon/cli",
     "Types": [
       "Software and Configuration Checks/Vulnerabilities/Code"
     ],
@@ -44,20 +44,20 @@
       ]
     },
     "ProductFields": {
-      "secfacts/dedup_key": "3eec261b5afa9281f1a06d21ae02d99052424d188aa8ff86038ae19e098a136e",
-      "secfacts/fingerprint_v1": "db0528fcc39e98c385f4e4d0b4b1b9cb7e9049c6d219a4a1f95a307a8f884954",
-      "secfacts/kind": "sast",
-      "secfacts/natural_key": "47e29cbae7f8ce0a5b620a7e27e81ab3c07b2420282a1c017fae89c0b3008aed",
-      "secfacts/provider": "secfacts"
+      "axon/dedup_key": "3eec261b5afa9281f1a06d21ae02d99052424d188aa8ff86038ae19e098a136e",
+      "axon/fingerprint_v1": "db0528fcc39e98c385f4e4d0b4b1b9cb7e9049c6d219a4a1f95a307a8f884954",
+      "axon/kind": "sast",
+      "axon/natural_key": "47e29cbae7f8ce0a5b620a7e27e81ab3c07b2420282a1c017fae89c0b3008aed",
+      "axon/provider": "axon"
     }
   },
   {
     "SchemaVersion": "2018-10-08",
-    "Id": "urn:secfacts:finding:fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a",
+    "Id": "urn:axon:finding:fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a",
     "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
-    "ProductName": "secfacts",
+    "ProductName": "axon",
     "AwsAccountId": "123456789012",
-    "GeneratorId": "secfacts/cli",
+    "GeneratorId": "axon/cli",
     "Types": [
       "Software and Configuration Checks/Vulnerabilities/CVE"
     ],
@@ -97,11 +97,12 @@
       ]
     },
     "ProductFields": {
-      "secfacts/dedup_key": "a76db6a11145aefc885ba8f39a6a29468746237defedf5775830eea43f9ac137",
-      "secfacts/fingerprint_v1": "fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a",
-      "secfacts/kind": "sca",
-      "secfacts/natural_key": "cee947f543402fc78335a3d91d1715993a796781d4ba4bdb114ec26ff471b3be",
-      "secfacts/provider": "secfacts"
+      "axon/dedup_key": "a76db6a11145aefc885ba8f39a6a29468746237defedf5775830eea43f9ac137",
+      "axon/fingerprint_v1": "fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a",
+      "axon/kind": "sca",
+      "axon/natural_key": "cee947f543402fc78335a3d91d1715993a796781d4ba4bdb114ec26ff471b3be",
+      "axon/provider": "axon"
     }
   }
 ]
+

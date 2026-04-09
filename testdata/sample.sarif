@@ -5,7 +5,7 @@
     {
       "tool": {
         "driver": {
-          "name": "secfacts",
+          "name": "axon",
           "version": "0.1.0-dev",
           "rules": [
             {
@@ -39,7 +39,7 @@
           },
           "properties": {
             "kind": "sca",
-            "provider": "secfacts",
+            "provider": "axon",
             "severity_score": 8.2
           }
         },
@@ -68,7 +68,7 @@
           },
           "properties": {
             "kind": "sast",
-            "provider": "secfacts",
+            "provider": "axon",
             "severity_score": 5
           }
         }
@@ -76,3 +76,4 @@
     }
   ]
 }
+

@@ -7,7 +7,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/secfacts/secfacts/internal/core/domain"
+	"github.com/axon/axon/internal/core/domain"
 )
 
 // MarkdownExporter implements ports.Exporter for Markdown report generation.
@@ -24,7 +24,7 @@ func (e *MarkdownExporter) Export(ctx context.Context, w io.Writer, issues []dom
 		return issues[i].Severity.Score > issues[j].Severity.Score
 	})
 
-	fmt.Fprintln(w, "# Secfacts Security Scan Report")
+	fmt.Fprintln(w, "# Axon Security Scan Report")
 	fmt.Fprintf(w, "Generated on: %s\n\n", time.Now().Format(time.RFC1123))
 
 	fmt.Fprintln(w, "## Executive Summary")

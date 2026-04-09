@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	sferr "github.com/secfacts/secfacts/internal/domain/errors"
-	"github.com/secfacts/secfacts/internal/domain/evidence"
-	"github.com/secfacts/secfacts/internal/ports"
+	sferr "github.com/axon/axon/internal/domain/errors"
+	"github.com/axon/axon/internal/domain/evidence"
+	"github.com/axon/axon/internal/ports"
 )
 
 const opParse = "trivy.Parser.Parse"
@@ -102,7 +102,7 @@ func (Parser) Parse(ctx context.Context, req ports.ParseRequest, sink ports.Find
 		if err == io.EOF {
 			return nil
 		}
-		return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read trivy opening token")
+		return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "read trivy opening token")
 	}
 	delim, ok := token.(json.Delim)
 	if !ok || delim != '{' {
@@ -120,7 +120,7 @@ func (Parser) Parse(ctx context.Context, req ports.ParseRequest, sink ports.Find
 
 		keyToken, err := decoder.Token()
 		if err != nil {
-			return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode trivy key")
+			return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "decode trivy key")
 		}
 		key, ok := keyToken.(string)
 		if !ok {
@@ -130,15 +130,15 @@ func (Parser) Parse(ctx context.Context, req ports.ParseRequest, sink ports.Find
 		switch key {
 		case "ArtifactName":
 			if err := decoder.Decode(&doc.ArtifactName); err != nil {
-				return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode artifact name")
+				return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "decode artifact name")
 			}
 		case "ArtifactType":
 			if err := decoder.Decode(&doc.ArtifactType); err != nil {
-				return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode artifact type")
+				return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "decode artifact type")
 			}
 		case "Metadata":
 			if err := decoder.Decode(&doc.Metadata); err != nil {
-				return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode metadata")
+				return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "decode metadata")
 			}
 		case "Results":
 			sawResults = true
@@ -152,13 +152,13 @@ func (Parser) Parse(ctx context.Context, req ports.ParseRequest, sink ports.Find
 		default:
 			var discard json.RawMessage
 			if err := decoder.Decode(&discard); err != nil {
-				return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "discard trivy field")
+				return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "discard trivy field")
 			}
 		}
 	}
 
 	if _, err := decoder.Token(); err != nil {
-		return sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read trivy closing token")
+		return sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "read trivy closing token")
 	}
 	if !sawResults {
 		return sferr.New(sferr.CodeUnsupportedInput, opParse, "trivy report results are missing")
@@ -238,7 +238,7 @@ func streamResults(
 ) (bool, error) {
 	token, err := decoder.Token()
 	if err != nil {
-		return false, sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read trivy results token")
+		return false, sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "read trivy results token")
 	}
 	delim, ok := token.(json.Delim)
 	if !ok || delim != '[' {
@@ -262,12 +262,12 @@ func streamResults(
 		start := decoder.InputOffset()
 		var rawResult json.RawMessage
 		if err := decoder.Decode(&rawResult); err != nil {
-			return true, sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode trivy result")
+			return true, sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "decode trivy result")
 		}
 
 		var parsed result
 		if err := json.Unmarshal(rawResult, &parsed); err != nil {
-			return true, sferr.Wrap(sferr.CodeParseFailed, opParse, err, "decode trivy result payload")
+			return true, sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "decode trivy result payload")
 		}
 
 		meta := ports.ParseMetadata{
@@ -300,7 +300,7 @@ func streamResults(
 	}
 
 	if _, err := decoder.Token(); err != nil {
-		return true, sferr.Wrap(sferr.CodeParseFailed, opParse, err, "read trivy results closing token")
+		return true, sferr.WrapJSON(sferr.CodeParseFailed, opParse, err, req.ReaderAt, "read trivy results closing token")
 	}
 
 	return true, nil

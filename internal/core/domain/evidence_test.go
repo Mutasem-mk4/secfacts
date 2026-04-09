@@ -1,7 +1,7 @@
 package domain_test
 
 import (
-	"github.com/secfacts/secfacts/internal/core/domain"
+	"github.com/axon/axon/internal/core/domain"
 	"testing"
 	"time"
 )

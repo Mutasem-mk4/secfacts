@@ -8,11 +8,11 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	pb "github.com/secfacts/secfacts/api/proto/v1"
-	ingress "github.com/secfacts/secfacts/internal/adapters/ingress/grpc"
-	"github.com/secfacts/secfacts/internal/adapters/messaging/nats"
-	"github.com/secfacts/secfacts/internal/bootstrap"
-	"github.com/secfacts/secfacts/internal/core/services/cache"
+	pb "github.com/axon/axon/api/proto/v1"
+	ingress "github.com/axon/axon/internal/adapters/ingress/grpc"
+	"github.com/axon/axon/internal/adapters/messaging/nats"
+	"github.com/axon/axon/internal/bootstrap"
+	"github.com/axon/axon/internal/core/services/cache"
 )
 
 func newServeCommand(cfg bootstrap.Config, logger zerolog.Logger) *cobra.Command {

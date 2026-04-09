@@ -1,25 +1,26 @@
-Source: secfacts
+Source: axon
 Section: utils
 Priority: optional
-Maintainer: Secfacts Maintainers <team@secfacts.org>
-Build-Depends: debhelper-compat (= 13),
-               dh-golang,
-               golang-any (>= 1.25)
-Standards-Version: 4.6.2
-Homepage: https://github.com/secfacts/secfacts
+Maintainer: Axon Maintainers <team@axon.org>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-golang,
+ golang-any (>= 1.22),
+Standards-Version: 4.7.0
 Rules-Requires-Root: no
-Go-Import-Path: github.com/secfacts/secfacts
+Homepage: https://github.com/axon/axon
+Vcs-Browser: https://github.com/axon/axon
+Vcs-Git: https://github.com/axon/axon.git
+Go-Import-Path: github.com/axon/axon
 
-Package: secfacts
+Package: axon
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: High-performance security evidence normalization & correlation engine
- secfacts is a specialized tool designed to combat security alert fatigue.
- It transforms raw findings from multiple scanners (SAST, DAST, SCA, Cloud)
- into actionable logical issues using a sharded actor correlation engine.
+Description: streaming security evidence normalization and export CLI
+ Axon ingests scanner output, normalizes findings into a canonical model,
+ deduplicates and correlates related evidence, and exports the result as JSON,
+ SARIF, or AWS ASFF.
  .
- Key features:
-  * Zero-copy streaming JSON/SARIF ingestion.
-  * Deterministic lock-free deduplication.
-  * Context-aware severity scoring.
-  * CI/CD ready with configurable thresholds.
+ The current architecture uses a two-pass ingest pipeline with offset-based
+ hydration so large reports can be processed without retaining every finding in
+ memory during export.

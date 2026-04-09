@@ -1,9 +1,9 @@
 {
-  "SchemaVersion": "secfacts.iem/v1alpha1",
+  "SchemaVersion": "axon.iem/v1alpha1",
   "GeneratedAt": "2026-04-09T14:47:06.8470262Z",
   "Source": {
-    "Provider": "secfacts",
-    "ToolName": "secfacts",
+    "Provider": "axon",
+    "ToolName": "axon",
     "ToolVersion": "0.1.0-dev",
     "Format": "auto",
     "FormatVersion": "",
@@ -17,7 +17,7 @@
   },
   "Findings": [
     {
-      "SchemaVersion": "secfacts.iem/v1alpha1",
+      "SchemaVersion": "axon.iem/v1alpha1",
       "ID": "fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a",
       "Kind": "sca",
       "Title": "OpenSSL vulnerability",
@@ -86,8 +86,8 @@
       ],
       "Tags": null,
       "Source": {
-        "Provider": "secfacts",
-        "Scanner": "secfacts",
+        "Provider": "axon",
+        "Scanner": "axon",
         "ScannerVersion": "0.1.0-dev",
         "FindingID": "CVE-2024-0001",
         "RunID": ""
@@ -110,7 +110,7 @@
       "RawRecordChecksum": ""
     },
     {
-      "SchemaVersion": "secfacts.iem/v1alpha1",
+      "SchemaVersion": "axon.iem/v1alpha1",
       "ID": "bc9dde3248ef2e195b0c252fe919947d74110bad6d958b75fab9e376ca1155fc",
       "Kind": "secrets",
       "Title": "AWS secret detected",
@@ -162,8 +162,8 @@
       "References": null,
       "Tags": null,
       "Source": {
-        "Provider": "secfacts",
-        "Scanner": "secfacts",
+        "Provider": "axon",
+        "Scanner": "axon",
         "ScannerVersion": "0.1.0-dev",
         "FindingID": "aws-access-key-id",
         "RunID": ""
@@ -182,3 +182,4 @@
   ],
   "Correlations": []
 }
+

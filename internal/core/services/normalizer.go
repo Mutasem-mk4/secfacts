@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/secfacts/secfacts/internal/core/domain"
-	"github.com/secfacts/secfacts/internal/core/ports"
+	"github.com/axon/axon/internal/core/domain"
+	"github.com/axon/axon/internal/core/ports"
 )
 
 // ShardedNormalizer implements the ports.Normalizer interface using a sharded actor model.

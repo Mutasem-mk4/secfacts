@@ -46,7 +46,10 @@ type Resource struct {
 	Type    string `json:"type,omitempty"`
 }
 
-// Evidence is the core IEM struct for secfacts normalization.
+// AckFunc is a callback for manual message acknowledgment.
+type AckFunc func() error
+
+// Evidence is the core IEM struct for axon normalization.
 type Evidence struct {
 	ID            string            `json:"id"`            // Deterministic hash (Normalized/Fuzzy)
 	Provider      string            `json:"provider"`      // Tool name
@@ -57,4 +60,5 @@ type Evidence struct {
 	Severity      Severity          `json:"severity"`          // Canonical 0-10 score
 	Details       map[string]string `json:"details,omitempty"` // Raw tool-specific data
 	Timestamp     time.Time         `json:"timestamp"`         // Discovery timestamp
+	Ack           AckFunc           `json:"-"`                 // Ack callback (not serialized)
 }

@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/axon/axon/internal/core/domain"
+	"github.com/axon/axon/internal/core/ports"
 	"github.com/nats-io/nats.go"
-	"github.com/secfacts/secfacts/internal/core/domain"
-	"github.com/secfacts/secfacts/internal/core/ports"
 	"hash/fnv"
 )
 
 const (
-	StreamName    = "secfacts_evidence"
-	SubjectPrefix = "secfacts.evidence"
+	StreamName    = "axon_evidence"
+	SubjectPrefix = "axon.evidence"
 )
 
 // NATSAdapter implements both Publisher and Subscriber for NATS JetStream.
@@ -104,8 +104,11 @@ func (a *NATSAdapter) Subscribe(ctx context.Context, shards []int) (<-chan domai
 								m.Ack()
 								continue
 							}
+							// Assign manual Ack callback to avoid data loss during processing
+							ev.Ack = func() error {
+								return m.Ack()
+							}
 							evChan <- ev
-							m.Ack()
 						}
 					}
 				}

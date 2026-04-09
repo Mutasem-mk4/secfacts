@@ -3,8 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
-	"github.com/secfacts/secfacts/internal/core/domain"
-	"github.com/secfacts/secfacts/internal/core/ports"
+	"github.com/axon/axon/internal/core/ports"
 	"github.com/rs/zerolog/log"
 )
 
@@ -46,6 +45,15 @@ func (w *Worker) Start(ctx context.Context) error {
 				Str("id", issue.ID).
 				Float32("score", issue.Severity.Score).
 				Msg("correlated issue processed")
+
+			// Acknowledge all findings associated with this issue
+			for _, f := range issue.Findings {
+				if f.Ack != nil {
+					if err := f.Ack(); err != nil {
+						log.Error().Err(err).Str("finding_id", f.ID).Msg("failed to acknowledge finding")
+					}
+				}
+			}
 			// TODO: Final Aggregate Store integration
 		}
 	}()

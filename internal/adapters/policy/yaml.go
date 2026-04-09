@@ -5,8 +5,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	sferr "github.com/secfacts/secfacts/internal/domain/errors"
-	domainpolicy "github.com/secfacts/secfacts/internal/domain/policy"
+	sferr "github.com/axon/axon/internal/domain/errors"
+	domainpolicy "github.com/axon/axon/internal/domain/policy"
 )
 
 const opLoad = "policyyaml.LoadFile"

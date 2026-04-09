@@ -4,8 +4,8 @@ import (
 	"strings"
 	"sync"
 
-	sferr "github.com/secfacts/secfacts/internal/domain/errors"
-	"github.com/secfacts/secfacts/internal/ports"
+	sferr "github.com/axon/axon/internal/domain/errors"
+	"github.com/axon/axon/internal/ports"
 )
 
 const (

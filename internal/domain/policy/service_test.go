@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/secfacts/secfacts/internal/domain/evidence"
+	"github.com/axon/axon/internal/domain/evidence"
 )
 
 func TestCompareCategorizesFindingsByFingerprint(t *testing.T) {

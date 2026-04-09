@@ -8,10 +8,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/secfacts/secfacts/internal/adapters/messaging/nats"
-	"github.com/secfacts/secfacts/internal/bootstrap"
-	"github.com/secfacts/secfacts/internal/core/services"
-	"github.com/secfacts/secfacts/internal/core/services/worker"
+	"github.com/axon/axon/internal/bootstrap"
+	sferr "github.com/axon/axon/internal/domain/errors"
 )
 
 func newWorkerCommand(cfg bootstrap.Config, logger zerolog.Logger) *cobra.Command {
@@ -23,32 +21,18 @@ func newWorkerCommand(cfg bootstrap.Config, logger zerolog.Logger) *cobra.Comman
 		Use:   "worker",
 		Short: "Start a sharded worker to process security evidence from NATS.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			// Parse assigned shards
 			shards, err := parseShards(assignedShardsStr)
 			if err != nil {
 				return err
 			}
 
-			// Initialize NATS Subscriber
-			subscriber, err := nats.NewNATSAdapter(natsURL, totalShards)
-			if err != nil {
-				return fmt.Errorf("failed to connect to NATS: %w", err)
-			}
-
-			// Initialize Processing Pipeline Components
-			// Note: These should ideally be reused from the existing usecase services
-			// For simplicity, we re-initialize here for now.
-			normalizer := &services.Pipeline{} // Placeholder, needs actual normalizer service
-			correlator := &services.Pipeline{} // Placeholder, needs actual correlator service
-
-			w := worker.NewWorker(subscriber, normalizer, correlator, shards)
-
 			logger.Info().
 				Str("nats_url", natsURL).
+				Int("total_shards", totalShards).
 				Ints("assigned_shards", shards).
-				Msg("starting sharded worker")
+				Msg("worker mode requested")
 
-			return w.Start(cmd.Context())
+			return sferr.New(sferr.CodeUnimplemented, "worker", "worker mode is not wired to the current normalization pipeline")
 		},
 	}
 

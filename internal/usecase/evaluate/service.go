@@ -3,9 +3,9 @@ package evaluate
 import (
 	"context"
 
-	sferr "github.com/secfacts/secfacts/internal/domain/errors"
-	"github.com/secfacts/secfacts/internal/domain/evidence"
-	"github.com/secfacts/secfacts/internal/domain/policy"
+	sferr "github.com/axon/axon/internal/domain/errors"
+	"github.com/axon/axon/internal/domain/evidence"
+	"github.com/axon/axon/internal/domain/policy"
 )
 
 const opRun = "evaluate.Service.Run"

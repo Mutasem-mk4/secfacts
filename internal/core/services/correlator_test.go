@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/secfacts/secfacts/internal/core/domain"
-	"github.com/secfacts/secfacts/internal/core/services"
+	"github.com/axon/axon/internal/core/domain"
+	"github.com/axon/axon/internal/core/services"
 )
 
 func TestCorrelatorService_ContextAwareScoring(t *testing.T) {

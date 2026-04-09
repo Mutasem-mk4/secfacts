@@ -14,7 +14,7 @@ type Issue struct {
 
 // RemediationProposal defines the structured AI-assisted fix.
 type RemediationProposal struct {
-	Explanation    string `json:"explanation"`    // Why this fix is needed
+	Explanation    string `json:"explanation"`     // Why this fix is needed
 	RiskAssessment string `json:"risk_assessment"` // Potential side effects
 	Plan           string `json:"plan"`            // Step-by-step instructions
 	CodeDiff       string `json:"code_diff"`       // Unified Diff format

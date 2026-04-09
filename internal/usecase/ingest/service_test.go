@@ -12,11 +12,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/secfacts/secfacts/internal/domain/correlation"
-	"github.com/secfacts/secfacts/internal/domain/dedup"
-	"github.com/secfacts/secfacts/internal/domain/evidence"
-	"github.com/secfacts/secfacts/internal/ports"
-	"github.com/secfacts/secfacts/internal/usecase/normalize"
+	"github.com/axon/axon/internal/domain/correlation"
+	"github.com/axon/axon/internal/domain/dedup"
+	"github.com/axon/axon/internal/domain/evidence"
+	"github.com/axon/axon/internal/ports"
+	"github.com/axon/axon/internal/usecase/normalize"
 )
 
 func BenchmarkServiceRun(b *testing.B) {

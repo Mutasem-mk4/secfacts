@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/secfacts/secfacts/internal/adapters/parser/iemjson"
+	"github.com/axon/axon/internal/adapters/parser/iemjson"
 )
 
 func TestLoadIEMJSONReadsExportedDocument(t *testing.T) {
@@ -15,7 +15,7 @@ func TestLoadIEMJSONReadsExportedDocument(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "baseline.json")
 	data := `{
-  "SchemaVersion":"secfacts.iem/v1alpha1",
+  "SchemaVersion":"axon.iem/v1alpha1",
   "Findings":[
     {
       "ID":"finding-1",

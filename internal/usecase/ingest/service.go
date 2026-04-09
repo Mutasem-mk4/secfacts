@@ -14,10 +14,10 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/secfacts/secfacts/internal/domain/correlation"
-	sferr "github.com/secfacts/secfacts/internal/domain/errors"
-	"github.com/secfacts/secfacts/internal/domain/evidence"
-	"github.com/secfacts/secfacts/internal/ports"
+	"github.com/axon/axon/internal/domain/correlation"
+	sferr "github.com/axon/axon/internal/domain/errors"
+	"github.com/axon/axon/internal/domain/evidence"
+	"github.com/axon/axon/internal/ports"
 )
 
 const opRun = "ingest.Service.Run"
@@ -327,6 +327,11 @@ func (s Service) parseFile(ctx context.Context, file discoveredFile, out chan<- 
 			return sferr.Wrap(sferr.CodeIO, opRun, err, "open input")
 		}
 
+		var readerAt io.ReaderAt
+		if ra, ok := handle.(io.ReaderAt); ok {
+			readerAt = ra
+		}
+
 		sink := parserSinkFunc(func(ctx context.Context, finding evidence.Finding, meta ports.ParseMetadata) error {
 			envelope := envelopePool.Get().(*findingEnvelope)
 			envelope.finding = finding
@@ -346,6 +351,7 @@ func (s Service) parseFile(ctx context.Context, file discoveredFile, out chan<- 
 			Source:   file.source,
 			Filename: file.path,
 			Reader:   handle,
+			ReaderAt: readerAt,
 		}, sink)
 		_ = handle.Close()
 		if err == nil {
@@ -518,6 +524,10 @@ func (s Service) streamHydratedFindings(ctx context.Context, inputs []Input, sel
 }
 
 func (s Service) streamInput(ctx context.Context, input Input, selected map[string][]evidence.FindingRef, emit func(evidence.Finding) error) error {
+	if input.Reader != nil {
+		return s.streamSelectedFile(ctx, discoveredInputFile(input), selected[input.Path], emit)
+	}
+
 	info, err := os.Stat(input.Path)
 	if err != nil {
 		return sferr.Wrap(sferr.CodeDiscoveryFailed, opRun, err, "stat input")

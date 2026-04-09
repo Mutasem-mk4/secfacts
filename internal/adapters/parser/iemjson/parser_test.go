@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/secfacts/secfacts/internal/domain/evidence"
-	"github.com/secfacts/secfacts/internal/ports"
+	"github.com/axon/axon/internal/domain/evidence"
+	"github.com/axon/axon/internal/ports"
 )
 
 func TestParserParsesFindingArray(t *testing.T) {
@@ -62,7 +62,7 @@ func TestParserHydratesFindingArrayRange(t *testing.T) {
 		Reader:   strings.NewReader(input),
 		Source: evidence.SourceDescriptor{
 			Provider:    "iemjson",
-			ToolName:    "secfacts",
+			ToolName:    "axon",
 			ToolVersion: "1.0.0",
 		},
 	}, sinkWithMetaFunc(func(_ context.Context, finding evidence.Finding, meta ports.ParseMetadata) error {
@@ -79,7 +79,7 @@ func TestParserHydratesFindingArrayRange(t *testing.T) {
 			Reader:   bytes.NewReader([]byte(input)),
 			Source: evidence.SourceDescriptor{
 				Provider:    "iemjson",
-				ToolName:    "secfacts",
+				ToolName:    "axon",
 				ToolVersion: "1.0.0",
 			},
 			Meta: item.meta,

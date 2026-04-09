@@ -1,16 +1,19 @@
 #!/usr/bin/make -f
 
-# Standard Debian Go rules using dh-golang
-export DH_GOPACKAGE := github.com/secfacts/secfacts
+export DH_GOLANG_INSTALL_ALL := 1
+export DH_GOPACKAGE := github.com/axon/axon
+export GOFLAGS := -buildvcs=false
 
 %:
 	dh $@ --buildsystem=golang --with=golang
 
-# Enable hardening and optimization
 override_dh_auto_build:
-	dh_auto_build -- -ldflags "-s -w -X main.version=1.0.0"
+	$(MAKE) build completion
 
-# Avoid building unwanted sub-packages or internal commands
+override_dh_auto_test:
+	go test ./...
+
 override_dh_auto_install:
-	dh_auto_install --destdir=debian/secfacts
-	rm -rf debian/secfacts/usr/lib
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/axon PREFIX=/usr
+	$(MAKE) install-completions DESTDIR=$(CURDIR)/debian/axon PREFIX=/usr
+	$(MAKE) install-man DESTDIR=$(CURDIR)/debian/axon PREFIX=/usr

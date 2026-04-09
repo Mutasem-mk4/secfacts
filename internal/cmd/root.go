@@ -9,8 +9,8 @@ import (
 var (
 	// rootCmd represents the base command when called without any subcommands.
 	rootCmd = &cobra.Command{
-		Use:   "secfacts",
-		Short: "secfacts is a high-performance security evidence normalization engine",
+		Use:   "axon",
+		Short: "axon is a high-performance security evidence normalization engine",
 		Long: `A robust tool for normalizing, deduplicating, and correlating findings from 
 disparate security sources (SAST, DAST, SCA, Cloud) into a canonical Internal Evidence Model.
 Built with performance and zero-copy processing as primary goals.`,

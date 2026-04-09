@@ -1,9 +1,9 @@
 {
-  "SchemaVersion": "secfacts.iem/v1alpha1",
+  "SchemaVersion": "axon.iem/v1alpha1",
   "GeneratedAt": "2026-04-09T14:18:01.7636852Z",
   "Source": {
-    "Provider": "secfacts",
-    "ToolName": "secfacts",
+    "Provider": "axon",
+    "ToolName": "axon",
     "ToolVersion": "0.1.0-dev",
     "Format": "auto",
     "FormatVersion": "",
@@ -17,7 +17,7 @@
   },
   "Findings": [
     {
-      "SchemaVersion": "secfacts.iem/v1alpha1",
+      "SchemaVersion": "axon.iem/v1alpha1",
       "ID": "fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a",
       "Kind": "sca",
       "Title": "openssl vulnerable package",
@@ -73,8 +73,8 @@
       "References": null,
       "Tags": null,
       "Source": {
-        "Provider": "secfacts",
-        "Scanner": "secfacts",
+        "Provider": "axon",
+        "Scanner": "axon",
         "ScannerVersion": "0.1.0-dev",
         "FindingID": "",
         "RunID": ""
@@ -97,7 +97,7 @@
       "RawRecordChecksum": ""
     },
     {
-      "SchemaVersion": "secfacts.iem/v1alpha1",
+      "SchemaVersion": "axon.iem/v1alpha1",
       "ID": "db0528fcc39e98c385f4e4d0b4b1b9cb7e9049c6d219a4a1f95a307a8f884954",
       "Kind": "sast",
       "Title": "tainted user input reaches sink",
@@ -137,8 +137,8 @@
       "References": null,
       "Tags": null,
       "Source": {
-        "Provider": "secfacts",
-        "Scanner": "secfacts",
+        "Provider": "axon",
+        "Scanner": "axon",
         "ScannerVersion": "0.1.0-dev",
         "FindingID": "",
         "RunID": ""
@@ -167,3 +167,4 @@
   ],
   "Correlations": []
 }
+

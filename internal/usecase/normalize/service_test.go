@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/secfacts/secfacts/internal/domain/evidence"
+	"github.com/axon/axon/internal/domain/evidence"
 )
 
 func TestNormalizeSeverityUsesCVSSAndLabels(t *testing.T) {

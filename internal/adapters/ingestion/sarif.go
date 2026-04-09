@@ -7,7 +7,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/secfacts/secfacts/internal/core/domain"
+	"github.com/axon/axon/internal/core/domain"
 )
 
 // SarifParser implements ports.Parser for SARIF format.

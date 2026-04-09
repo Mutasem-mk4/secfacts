@@ -1,8 +1,10 @@
 package errors
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 )
 
@@ -88,6 +90,43 @@ func Wrap(code Code, op string, err error, message string) error {
 		Message: strings.TrimSpace(message),
 		Err:     err,
 	}
+}
+
+func WrapJSON(code Code, op string, err error, r io.ReaderAt, message string) error {
+	if err == nil {
+		return nil
+	}
+
+	var syntaxErr *json.SyntaxError
+	if errors.As(err, &syntaxErr) {
+		snippet := getErrorSnippet(r, syntaxErr.Offset)
+		message = fmt.Sprintf("%s (at offset %d: %s)", message, syntaxErr.Offset, snippet)
+	}
+
+	return Wrap(code, op, err, message)
+}
+
+func getErrorSnippet(r io.ReaderAt, offset int64) string {
+	if r == nil {
+		return ""
+	}
+
+	const snippetLen = 50
+	start := offset - snippetLen/2
+	if start < 0 {
+		start = 0
+	}
+
+	buf := make([]byte, snippetLen)
+	n, err := r.ReadAt(buf, start)
+	if err != nil && err != io.EOF {
+		return ""
+	}
+
+	snippet := string(buf[:n])
+	snippet = strings.ReplaceAll(snippet, "\n", " ")
+	snippet = strings.ReplaceAll(snippet, "\r", " ")
+	return "..." + strings.TrimSpace(snippet) + "..."
 }
 
 func CodeOf(err error) Code {

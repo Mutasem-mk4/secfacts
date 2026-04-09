@@ -3,7 +3,7 @@ package ports
 import (
 	"context"
 
-	"github.com/secfacts/secfacts/internal/domain/evidence"
+	"github.com/axon/axon/internal/domain/evidence"
 )
 
 type Normalizer interface {

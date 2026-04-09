@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"hash/fnv"
 
-	"github.com/secfacts/secfacts/internal/core/domain"
-	"github.com/secfacts/secfacts/internal/core/ports"
+	"github.com/axon/axon/internal/core/domain"
+	"github.com/axon/axon/internal/core/ports"
 )
 
 // CorrelatorService implements the ports.Correlator interface.

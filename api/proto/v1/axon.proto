@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package secfacts.v1;
+package axon.v1;
 
-option go_package = "github.com/secfacts/secfacts/api/proto/v1;secfactsv1";
+option go_package = "github.com/axon/axon/api/proto/v1;axonv1";
 
 import "google/protobuf/timestamp.proto";
 
@@ -49,7 +49,7 @@ message Resource {
   string type = 4;
 }
 
-// Evidence is the core IEM struct for secfacts normalization.
+// Evidence is the core IEM struct for axon normalization.
 message Evidence {
   string id = 1;
   string provider = 2;
@@ -78,3 +78,4 @@ service IngressService {
   // IngestStream receives a stream of Evidence from a runner and returns an acknowledgment stream.
   rpc IngestStream(stream IngestRequest) returns (stream IngestResponse);
 }
+

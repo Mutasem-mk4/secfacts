@@ -1,11 +1,11 @@
 [
   {
     "SchemaVersion": "2018-10-08",
-    "Id": "urn:secfacts:finding:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "Id": "urn:axon:finding:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
-    "ProductName": "secfacts",
+    "ProductName": "axon",
     "AwsAccountId": "123456789012",
-    "GeneratorId": "secfacts/test",
+    "GeneratorId": "axon/test",
     "Types": [
       "Software and Configuration Checks/Vulnerabilities/CVE"
     ],
@@ -45,20 +45,20 @@
       ]
     },
     "ProductFields": {
-      "secfacts/dedup_key": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-      "secfacts/fingerprint_v1": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "secfacts/kind": "sca",
-      "secfacts/natural_key": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-      "secfacts/provider": ""
+      "axon/dedup_key": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "axon/fingerprint_v1": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "axon/kind": "sca",
+      "axon/natural_key": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "axon/provider": ""
     }
   },
   {
     "SchemaVersion": "2018-10-08",
-    "Id": "urn:secfacts:finding:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "Id": "urn:axon:finding:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
     "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
-    "ProductName": "secfacts",
+    "ProductName": "axon",
     "AwsAccountId": "123456789012",
-    "GeneratorId": "secfacts/test",
+    "GeneratorId": "axon/test",
     "Types": [
       "Software and Configuration Checks/Vulnerabilities/Code"
     ],
@@ -97,11 +97,12 @@
       ]
     },
     "ProductFields": {
-      "secfacts/dedup_key": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-      "secfacts/fingerprint_v1": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-      "secfacts/kind": "sast",
-      "secfacts/natural_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-      "secfacts/provider": ""
+      "axon/dedup_key": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "axon/fingerprint_v1": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "axon/kind": "sast",
+      "axon/natural_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "axon/provider": ""
     }
   }
 ]
+

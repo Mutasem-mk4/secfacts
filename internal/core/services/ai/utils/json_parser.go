@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/secfacts/secfacts/internal/core/domain"
+	"github.com/axon/axon/internal/core/domain"
 )
 
 // ExtractJSON handles potentially "messy" output from LLMs by finding the first JSON block.

@@ -4,7 +4,7 @@ import (
 	"context"
 	"sort"
 
-	"github.com/secfacts/secfacts/internal/domain/evidence"
+	"github.com/axon/axon/internal/domain/evidence"
 )
 
 const opCorrelate = "correlation.Service.Correlate"

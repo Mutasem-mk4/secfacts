@@ -10,10 +10,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/axon/axon/internal/core/domain"
+	"github.com/axon/axon/internal/core/services/ai/prompt"
+	"github.com/axon/axon/internal/core/services/ai/utils"
 	"github.com/cenkalti/backoff/v4"
-	"github.com/secfacts/secfacts/internal/core/domain"
-	"github.com/secfacts/secfacts/internal/core/services/ai/prompt"
-	"github.com/secfacts/secfacts/internal/core/services/ai/utils"
 )
 
 const (

@@ -7,10 +7,10 @@ import (
 
 // LRUCache is a simple thread-safe LRU cache for deduplication.
 type LRUCache struct {
-	capacity int
-	items    map[string]*list.Element
+	capacity  int
+	items     map[string]*list.Element
 	evictList *list.List
-	mu       sync.RWMutex
+	mu        sync.RWMutex
 }
 
 type entry struct {

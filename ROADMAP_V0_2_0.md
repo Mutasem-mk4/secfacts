@@ -1,13 +1,13 @@
-# secfacts v0.2.0: Distributed Streaming & AI Remediation
+# axon v0.2.0: Distributed Streaming & AI Remediation
 
 ## 🌐 1. Distributed gRPC / NATS Ingestion
 
-To handle 100+ concurrent CI/CD runners, `secfacts` will transition from a standalone CLI to a **Distributed Ingestion Architecture**.
+To handle 100+ concurrent CI/CD runners, `axon` will transition from a standalone CLI to a **Distributed Ingestion Architecture**.
 
 ### **The Architecture**
-- **Ingress Layer:** A gRPC server implementation of `ports.Parser`. Runners will stream `domain.Evidence` directly to a central `secfacts` cluster.
+- **Ingress Layer:** A gRPC server implementation of `ports.Parser`. Runners will stream `domain.Evidence` directly to a central `axon` cluster.
 - **Message Broker:** Integration with **NATS JetStream** for persistent, high-throughput evidence buffering.
-- **Sharded Worker Cluster:** Multiple `secfacts` instances sub-subscribe to specific hash-shards from NATS. This allows the deduplication logic to scale horizontally across multiple nodes while maintaining the lock-free "single worker per hash" guarantee.
+- **Sharded Worker Cluster:** Multiple `axon` instances sub-subscribe to specific hash-shards from NATS. This allows the deduplication logic to scale horizontally across multiple nodes while maintaining the lock-free "single worker per hash" guarantee.
 
 ```mermaid
 graph TD
@@ -47,3 +47,4 @@ type Proposal struct {
 
 ---
 *Moving toward a real-time, autonomous security truth stream.*
+

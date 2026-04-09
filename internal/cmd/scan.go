@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/secfacts/secfacts/internal/adapters/exporters"
-	"github.com/secfacts/secfacts/internal/adapters/ingestion"
-	"github.com/secfacts/secfacts/internal/core/services"
+	"github.com/axon/axon/internal/adapters/exporters"
+	"github.com/axon/axon/internal/adapters/ingestion"
+	"github.com/axon/axon/internal/core/services"
 	"github.com/spf13/cobra"
 )
 

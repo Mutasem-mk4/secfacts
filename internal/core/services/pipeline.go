@@ -7,9 +7,9 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/secfacts/secfacts/internal/core/domain"
-	"github.com/secfacts/secfacts/internal/core/ports"
-	"github.com/secfacts/secfacts/pkg/errors"
+	"github.com/axon/axon/internal/core/domain"
+	"github.com/axon/axon/internal/core/ports"
+	"github.com/axon/axon/pkg/errors"
 )
 
 // Pipeline coordinates the end-to-end security evidence processing flow.
@@ -129,7 +129,7 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 		colorBold   = "\033[1m"
 	)
 
-	fmt.Fprintf(w, "\n%s%s=== SECFACTS SCAN SUMMARY ===%s\n", colorBold, colorCyan, colorReset)
+	fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", colorBold, colorCyan, colorReset)
 
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 
