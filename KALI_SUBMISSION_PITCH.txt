@@ -33,5 +33,6 @@ We look forward to your feedback and hope to see `axon` in the official Kali rep
 Best regards,
 
 The Axon Maintainers
-https://github.com/Mutasem-mk4/secfacts
+https://github.com/Mutasem-mk4/axon
+
 

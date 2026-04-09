@@ -4,7 +4,7 @@ pkgver=1.0.0
 pkgrel=1
 pkgdesc="Streaming security evidence normalization and export CLI"
 arch=('x86_64' 'aarch64')
-url="https://github.com/Mutasem-mk4/secfacts"
+url="https://github.com/Mutasem-mk4/axon"
 license=('Apache')
 depends=('glibc')
 makedepends=('go' 'gzip')
@@ -36,3 +36,4 @@ package() {
   install -Dm644 "bin/_$pkgname" "$pkgdir/usr/share/zsh/site-functions/_$pkgname"
   install -Dm644 "bin/$pkgname.fish" "$pkgdir/usr/share/fish/vendor_completions.d/$pkgname.fish"
 }
+
