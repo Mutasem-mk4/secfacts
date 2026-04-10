@@ -3,14 +3,13 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/Mutasem-mk4/axon)](https://goreportcard.com/report/github.com/Mutasem-mk4/axon)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Stability: Stable](https://img.shields.io/badge/Stability-Stable-green.svg)](#)
-[![Version](https://img.shields.io/badge/Version-v1.0.0-blue.svg)](https://github.com/Mutasem-mk4/axon/releases)
 [![Axon Scan](https://github.com/Mutasem-mk4/axon/actions/workflows/axon-scan.yml/badge.svg)](https://github.com/Mutasem-mk4/axon/actions/workflows/axon-scan.yml)
+[![Version](https://img.shields.io/github/v/release/Mutasem-mk4/axon?color=blue&label=Latest%20Release)](https://github.com/Mutasem-mk4/axon/releases/latest)
 
 ---
 
-### **The Neural Link for Security Findings**
-Security scanners are noisy, fragmented, and slow. **Axon** is the high-performance transmission layer that connects messy scanner outputs (Trivy, SARIF) to actionable, AI-powered remediation. 
+### **From Alert Fatigue to Actionable Truth.**
+Security scanners are noisy, fragmented, and slow. **Axon** is the high-performance bridge that connects fragmented scanners (Trivy, Snyk, Gitleaks) to workflow engines (Jira, Slack) at **1M findings/sec**.
 
 Built with a **Zero-Copy philosophy** and a **Sharded Actor model**, Axon processes security evidence at the speed of your network, ensuring your CI/CD pipeline never waits for a security check again.
 
