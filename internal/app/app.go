@@ -19,7 +19,10 @@ import (
 	"github.com/axon/axon/internal/adapters/exporter/asff"
 	iemexporter "github.com/axon/axon/internal/adapters/exporter/iemjson"
 	"github.com/axon/axon/internal/adapters/exporter/sarif"
+	"github.com/axon/axon/internal/adapters/parser/checkov"
+	"github.com/axon/axon/internal/adapters/parser/gitleaks"
 	"github.com/axon/axon/internal/adapters/parser/iemjson"
+	"github.com/axon/axon/internal/adapters/parser/snyk"
 	"github.com/axon/axon/internal/adapters/parser/trivy"
 	policyyaml "github.com/axon/axon/internal/adapters/policy"
 	"github.com/axon/axon/internal/adapters/registry"
@@ -315,6 +318,9 @@ func newRegistries() (*registry.ParserRegistry, *registry.ExporterRegistry, erro
 	parserRegistry, err := registry.NewParserRegistry(
 		trivy.Parser{},
 		iemjson.Parser{},
+		gitleaks.Parser{},
+		snyk.Parser{},
+		checkov.Parser{},
 	)
 	if err != nil {
 		return nil, nil, err

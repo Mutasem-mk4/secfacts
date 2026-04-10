@@ -59,3 +59,11 @@ type RemediationService interface {
 	// ApplyFix executes the suggested code changes if the user confirms.
 	ApplyFix(ctx context.Context, proposal domain.RemediationProposal) error
 }
+
+// Sink defines the interface for external integrations (Jira, Slack, etc.).
+type Sink interface {
+	// Name returns the identifier of the sink.
+	Name() string
+	// Emit sends a single correlated issue to the external destination.
+	Emit(ctx context.Context, issue domain.Issue) error
+}

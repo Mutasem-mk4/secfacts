@@ -8,7 +8,12 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
+	"github.com/axon/axon/internal/adapters/messaging/nats"
+	"github.com/axon/axon/internal/adapters/sink"
 	"github.com/axon/axon/internal/bootstrap"
+	"github.com/axon/axon/internal/core/ports"
+	"github.com/axon/axon/internal/core/services"
+	"github.com/axon/axon/internal/core/services/worker"
 	sferr "github.com/axon/axon/internal/domain/errors"
 )
 
@@ -30,9 +35,28 @@ func newWorkerCommand(cfg bootstrap.Config, logger zerolog.Logger) *cobra.Comman
 				Str("nats_url", natsURL).
 				Int("total_shards", totalShards).
 				Ints("assigned_shards", shards).
-				Msg("worker mode requested")
+				Msg("starting worker...")
 
-			return sferr.New(sferr.CodeUnimplemented, "worker", "worker mode is not wired to the current normalization pipeline")
+			// 1. Messaging Adapter
+			natsAdapter, err := nats.NewNATSAdapter(natsURL, totalShards)
+			if err != nil {
+				return sferr.Wrap(sferr.CodeInternal, "worker", err, "initialize NATS adapter")
+			}
+
+			// 2. Services
+			normalizer := services.NewShardedNormalizer(cfg.Workers)
+			correlator := &services.CorrelatorService{}
+
+			// 3. Sinks (Integrations)
+			sinks := []ports.Sink{
+				sink.NewSlackSink(),
+				sink.NewJiraSink(),
+			}
+
+			// 4. Worker Orchestrator
+			w := worker.NewWorker(natsAdapter, normalizer, correlator, shards, sinks...)
+
+			return w.Start(cmd.Context())
 		},
 	}
 

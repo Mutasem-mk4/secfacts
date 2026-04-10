@@ -12,15 +12,17 @@ type Worker struct {
 	subscriber ports.Subscriber
 	normalizer ports.Normalizer
 	correlator ports.Correlator
+	sinks      []ports.Sink
 	shards     []int
 }
 
 // NewWorker creates a new sharded worker.
-func NewWorker(sub ports.Subscriber, norm ports.Normalizer, corr ports.Correlator, shards []int) *Worker {
+func NewWorker(sub ports.Subscriber, norm ports.Normalizer, corr ports.Correlator, shards []int, sinks ...ports.Sink) *Worker {
 	return &Worker{
 		subscriber: sub,
 		normalizer: norm,
 		correlator: corr,
+		sinks:      sinks,
 		shards:     shards,
 	}
 }
@@ -45,6 +47,13 @@ func (w *Worker) Start(ctx context.Context) error {
 				Str("id", issue.ID).
 				Float32("score", issue.Severity.Score).
 				Msg("correlated issue processed")
+
+			// Emit to all configured sinks (Slack, Jira, etc.)
+			for _, s := range w.sinks {
+				if err := s.Emit(ctx, issue); err != nil {
+					log.Error().Err(err).Str("sink", s.Name()).Str("issue_id", issue.ID).Msg("failed to emit issue to sink")
+				}
+			}
 
 			// Acknowledge all findings associated with this issue
 			for _, f := range issue.Findings {
