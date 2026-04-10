@@ -7,12 +7,13 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
-  release:
+  goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -21,13 +22,16 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.25'
+          cache: true
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
           args: release --clean
-          workdir: secfacts
+          workdir: ./axon
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # If you have a separate tap repo, you would add its token here
+          # TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
