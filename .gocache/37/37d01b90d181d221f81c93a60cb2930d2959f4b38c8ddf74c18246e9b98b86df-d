@@ -1,6 +1,0 @@
-# test log
-getenv SECFACTS_AWS_ACCOUNT_ID
-getenv SECFACTS_AWS_REGION
-getenv SECFACTS_AWS_PRODUCT_ARN
-getenv SECFACTS_AWS_GENERATOR_ID
-open testdata\golden_asff.json

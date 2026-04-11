@@ -1,5 +1,0 @@
-# github.com/secfacts/secfacts/internal/domain/evidence
-internal\domain\evidence/identity.go:332:16: Found IsInBounds
-internal\domain\evidence/hash.go:27:27: Found IsInBounds
-internal\domain\evidence/identity.go:125:27: Found IsInBounds
-internal\domain\evidence/identity.go:130:27: Found IsInBounds
