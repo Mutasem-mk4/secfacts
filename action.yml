@@ -41,7 +41,7 @@ runs:
       shell: bash
       run: |
         cd ${{ github.action_path }}
-        go build -o axon-bin ./cmd/axon || { go mod tidy && go build -o axon-bin ./cmd/axon; }
+        go build -o axon-bin ./cmd/axon
         echo "${{ github.action_path }}" >> $GITHUB_PATH
 
     - name: Run Axon Ingest
