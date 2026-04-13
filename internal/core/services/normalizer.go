@@ -45,7 +45,7 @@ func (s *ShardedNormalizer) Process(ctx context.Context, in <-chan domain.Eviden
 		go func(id int, ch <-chan domain.Evidence) {
 			defer wg.Done()
 			// Single-threaded state per worker - no locks required
-			localStore := make(map[string]domain.Evidence)
+			localStore := make(map[uint64]domain.Evidence)
 
 			for ev := range ch {
 				// 1. Path Cleaning & Resource Normalization
@@ -135,15 +135,15 @@ func (s *ShardedNormalizer) aliasID(id string, kind domain.FindingType) string {
 }
 
 // computeFingerprint generates the final deduplication key.
-func (s *ShardedNormalizer) computeFingerprint(ev domain.Evidence) string {
+func (s *ShardedNormalizer) computeFingerprint(ev domain.Evidence) uint64 {
 	h := fnv.New64a()
 	// Vulnerability + Resource + Path is our semantic triplet
-	_, _ = h.Write([]byte(ev.Vulnerability.ID))
+	_, _ = h.Write([]byte(ev.Vulnerability.ID)) // Go compiler optimizes []byte(string) conversion in h.Write
 	_, _ = h.Write([]byte(ev.Resource.URI))
 	if ev.Location != nil {
 		_, _ = h.Write([]byte(ev.Location.Path))
 	}
-	return string(h.Sum(nil))
+	return h.Sum64()
 }
 
 // computeRoutingHash provides deterministic routing for the dispatcher.
