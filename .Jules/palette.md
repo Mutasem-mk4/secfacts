@@ -1,0 +1,3 @@
+## 2026-04-14 - [Fixing misaligned columns when using ANSI colors in Go tabwriter]
+**Learning:** When using Go's `text/tabwriter` to render terminal tables, columns misalign when cells contain ANSI color escape sequences because the tabwriter counts the hidden escape codes towards the cell width calculation.
+**Action:** Always initialize tabwriter with the `tabwriter.StripEscape` flag (instead of 0) and wrap the ANSI color escape sequences with the `\xff` byte within strings formatted by the tabwriter. This allows tabwriter to correctly strip out the formatting sequence from the width calculation.
