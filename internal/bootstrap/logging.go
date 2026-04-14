@@ -36,10 +36,12 @@ func openLogFile(path string) (*os.File, error) {
 	if path == "" {
 		return nil, os.ErrInvalid
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	// Restrict log directory permissions (rwx------) to protect sensitive data
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return nil, err
 	}
-	return os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	// Restrict log file permissions (rw-------) to protect sensitive data
+	return os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
 }
 
 func selectWriter(format string, out io.Writer) io.Writer {
