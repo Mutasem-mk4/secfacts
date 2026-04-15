@@ -131,7 +131,7 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 
 	fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", colorBold, colorCyan, colorReset)
 
-	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', tabwriter.StripEscape)
+	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 
 	severityCounts := make(map[string]int)
 	var maxScore float32
