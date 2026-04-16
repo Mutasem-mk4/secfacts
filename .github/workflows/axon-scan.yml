@@ -23,7 +23,7 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Ingest with Axon
-        uses: ./
+        uses: ./axon
         with:
           input-path: 'trivy-results.sarif'
           format: 'json'
