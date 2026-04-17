@@ -127,11 +127,15 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 		colorYellow = "\033[33m"
 		colorCyan   = "\033[36m"
 		colorBold   = "\033[1m"
+
+		twReset  = "\xff" + colorReset + "\xff"
+		twRed    = "\xff" + colorRed + "\xff"
+		twYellow = "\xff" + colorYellow + "\xff"
 	)
 
 	fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", colorBold, colorCyan, colorReset)
 
-	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', tabwriter.StripEscape)
 
 	severityCounts := make(map[string]int)
 	var maxScore float32
@@ -143,8 +147,8 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 	}
 
 	fmt.Fprintf(tw, "Total Issues Found:\t%d\n", len(issues))
-	fmt.Fprintf(tw, "Critical Severity:\t%s%d%s\n", colorRed, severityCounts["critical"], colorReset)
-	fmt.Fprintf(tw, "High Severity:\t%s%d%s\n", colorYellow, severityCounts["high"], colorReset)
+	fmt.Fprintf(tw, "Critical Severity:\t%s%d%s\n", twRed, severityCounts["critical"], twReset)
+	fmt.Fprintf(tw, "High Severity:\t%s%d%s\n", twYellow, severityCounts["high"], twReset)
 	fmt.Fprintf(tw, "Medium Severity:\t%d\n", severityCounts["medium"])
 	fmt.Fprintf(tw, "Highest Score:\t%.1f\n", maxScore)
 
