@@ -1,0 +1,3 @@
+## 2025-04-20 - CLI Table Alignment with Colored Output
+**Learning:** In Go, terminal output using `text/tabwriter` calculates column widths by counting the characters in a string. Invisible ANSI color codes are counted as visible characters, causing subsequent columns to misalign and look unprofessional.
+**Action:** Always enable `tabwriter.StripEscape` when initializing a tabwriter and wrap the ANSI escape sequences in `\xff` bytes so the tabwriter ignores them when calculating widths. Also, ensure these wrapped codes are only used for text passed directly to the tabwriter, to avoid corrupting standard `io.Writer` or `os.Stdout` output with literal `\xff` characters.
