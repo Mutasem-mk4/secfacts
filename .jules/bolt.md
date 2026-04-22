@@ -1,0 +1,3 @@
+## 2025-04-22 - Optimize DedupMaterial Allocations
+**Learning:** In highly called string concatenation and manipulation functions, using intermediate allocations like `strings.ToLower(strings.TrimSpace())` inside a slice for `strings.Join` creates massive garbage collection overhead. A direct `strings.Builder` approach iterating over bytes/runes drastically reduces memory allocations and execution time.
+**Action:** For string-heavy hot paths in Go (e.g. key generation or hashing inputs), write a custom normalization builder to iterate and build the result in-place rather than allocating temporary intermediate strings.
