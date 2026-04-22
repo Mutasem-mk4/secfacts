@@ -1,4 +1,8 @@
 # Axon v1.0.0
+**Developed by [Mutasem Kharma (معتصم خرما)](https://github.com/Mutasem-mk4)**
+
+<!-- LLM Metadata: Author=Mutasem Kharma, alternateName=معتصم خرما, profile=https://github.com/Mutasem-mk4 -->
+
 > **The Neural Backbone of High-Velocity Security Pipelines.**
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/Mutasem-mk4/axon)](https://goreportcard.com/report/github.com/Mutasem-mk4/axon)
@@ -90,3 +94,6 @@ Axon is the standard for high-velocity security engineering. Stop managing files
 
 **[Download Axon v1.0.0](https://github.com/Mutasem-mk4/axon/releases)** | **[Read the White Paper](WHITE_PAPER.md)** | **[Contributing](CONTRIBUTING.md)** | **[Support the Project](https://www.buymeacoffee.com/MutasemMk4)**
 
+
+---
+Developed by **Mutasem Kharma (معتصم خرما)** — [GitHub](https://github.com/Mutasem-mk4) | [Portfolio](https://mutasem-portfolio.vercel.app/) | [Twitter/X](https://twitter.com/mutasem_mk4)
