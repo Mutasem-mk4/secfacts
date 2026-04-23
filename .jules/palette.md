@@ -1,0 +1,3 @@
+## 2025-04-18 - Go tabwriter and ANSI Escape Codes UX Polish
+**Learning:** Go's `text/tabwriter` calculates column widths using literal string length by default. When wrapping terminal text in ANSI escape codes (e.g., to add color or bold formatting), the hidden control characters inflate the string length and misalign columns, creating poor terminal UX.
+**Action:** When printing colored text into a `tabwriter.Writer`, always initialize it with the `tabwriter.StripEscape` flag and wrap ANSI control sequences precisely with the `\xff` escape character. This tells the writer to ignore those sequences during column width calculations but preserves the visual styling when rendering.
