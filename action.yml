@@ -35,7 +35,7 @@ runs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.25'
+        go-version: '1.25.0'
 
     - name: Build Axon
       shell: bash
