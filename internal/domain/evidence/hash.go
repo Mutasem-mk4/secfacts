@@ -3,27 +3,94 @@ package evidence
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"strings"
+	"sync"
 )
 
-func DedupMaterial(f Finding) string {
-	parts := []string{
-		strings.ToLower(strings.TrimSpace(string(f.Kind))),
-		strings.ToLower(strings.TrimSpace(f.Rule.ID)),
-		normalizedVulnerabilityID(f),
-		strings.ToLower(strings.TrimSpace(f.PackageName())),
-		strings.ToLower(strings.TrimSpace(f.PackageVersion())),
-		strings.ToLower(strings.TrimSpace(f.PrimaryLocation.URI)),
-		strings.ToLower(strings.TrimSpace(f.Artifact.Name)),
-		strings.ToLower(strings.TrimSpace(f.CloudResourceID())),
-		strings.ToLower(strings.TrimSpace(f.SecretFingerprint())),
+func isSpace(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
+}
+
+func writeNormalized(b []byte, s string) []byte {
+	start := 0
+	for start < len(s) && isSpace(s[start]) {
+		start++
+	}
+	end := len(s)
+	for end > start && isSpace(s[end-1]) {
+		end--
 	}
 
-	return strings.Join(parts, "|")
+	for i := start; i < end; i++ {
+		c := s[i]
+		if c >= 'A' && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		b = append(b, c)
+	}
+	return b
+}
+
+var dedupBufPool = sync.Pool{
+	New: func() interface{} {
+		b := make([]byte, 0, 512)
+		return &b
+	},
+}
+
+func fillDedupBuffer(b []byte, f Finding) []byte {
+	b = writeNormalized(b, string(f.Kind))
+	b = append(b, '|')
+	b = writeNormalized(b, f.Rule.ID)
+	b = append(b, '|')
+	if f.Vulnerability != nil {
+		b = writeNormalized(b, f.Vulnerability.ID)
+	}
+	b = append(b, '|')
+	if f.Package != nil {
+		b = writeNormalized(b, f.Package.Name)
+	}
+	b = append(b, '|')
+	if f.Package != nil {
+		b = writeNormalized(b, f.Package.Version)
+	}
+	b = append(b, '|')
+	b = writeNormalized(b, f.PrimaryLocation.URI)
+	b = append(b, '|')
+	b = writeNormalized(b, f.Artifact.Name)
+	b = append(b, '|')
+	if f.Cloud != nil {
+		if f.Cloud.ResourceARN != "" {
+			b = writeNormalized(b, f.Cloud.ResourceARN)
+		} else {
+			b = writeNormalized(b, f.Cloud.ResourceID)
+		}
+	}
+	b = append(b, '|')
+	if f.Secret != nil {
+		b = writeNormalized(b, f.Secret.Fingerprint)
+	}
+	return b
+}
+
+func DedupMaterial(f Finding) string {
+	ptr := dedupBufPool.Get().(*[]byte)
+	b := (*ptr)[:0]
+
+	b = fillDedupBuffer(b, f)
+
+	res := string(b)
+	dedupBufPool.Put(ptr)
+	return res
 }
 
 func DedupHash(f Finding) string {
-	sum := sha256.Sum256([]byte(DedupMaterial(f)))
+	ptr := dedupBufPool.Get().(*[]byte)
+	b := (*ptr)[:0]
+
+	b = fillDedupBuffer(b, f)
+
+	sum := sha256.Sum256(b)
+	dedupBufPool.Put(ptr)
 	return hex.EncodeToString(sum[:])
 }
 
@@ -63,10 +130,4 @@ func (f Finding) SecretFingerprint() string {
 	return f.Secret.Fingerprint
 }
 
-func normalizedVulnerabilityID(f Finding) string {
-	if f.Vulnerability == nil {
-		return ""
-	}
-
-	return strings.ToLower(strings.TrimSpace(f.Vulnerability.ID))
-}
+// normalizedVulnerabilityID is removed because its logic is inlined in fillDedupBuffer.

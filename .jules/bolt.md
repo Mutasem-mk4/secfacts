@@ -1,0 +1,3 @@
+## 2024-05-18 - String Manipulation Overhead in Deduplication Key Generation
+**Learning:** In highly-frequent critical paths like evidence deduplication (`internal/domain/evidence/hash.go`), chaining `strings.ToLower`, `strings.TrimSpace`, and `strings.Join` causes significant GC pressure and performance bottlenecks due to continuous string allocation and reallocation. Standard library string functions aren't zero-allocation.
+**Action:** When computing composite hashes or normalized identifiers, use a `sync.Pool` with `[]byte` buffers and custom logic to trim spaces and modify casing directly into the pooled byte slice. For operations where only a hash output is needed, pipe these pooled bytes directly to `sha256.Sum256` to avoid any string allocation whatsoever.
