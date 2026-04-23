@@ -22,8 +22,13 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.0'
+
       - name: Build Axon
-        run: GOTOOLCHAIN=local go build -mod=readonly -o axon-bin ./cmd/axon
+        run: go build -mod=readonly -o axon-bin ./cmd/axon
 
       - name: Ingest with Axon
         run: ./axon-bin ingest trivy-results.sarif -f json -o axon-security-report.json -s high
