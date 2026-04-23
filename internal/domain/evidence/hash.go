@@ -6,20 +6,38 @@ import (
 	"strings"
 )
 
-func DedupMaterial(f Finding) string {
-	parts := []string{
-		strings.ToLower(strings.TrimSpace(string(f.Kind))),
-		strings.ToLower(strings.TrimSpace(f.Rule.ID)),
-		normalizedVulnerabilityID(f),
-		strings.ToLower(strings.TrimSpace(f.PackageName())),
-		strings.ToLower(strings.TrimSpace(f.PackageVersion())),
-		strings.ToLower(strings.TrimSpace(f.PrimaryLocation.URI)),
-		strings.ToLower(strings.TrimSpace(f.Artifact.Name)),
-		strings.ToLower(strings.TrimSpace(f.CloudResourceID())),
-		strings.ToLower(strings.TrimSpace(f.SecretFingerprint())),
+// appendNormalized trims space and lowercases the string s, then appends it to buf.
+// It also prepends a '|' separator if this is not the first element.
+func appendNormalized(buf []byte, s string, isFirst bool) []byte {
+	if !isFirst {
+		buf = append(buf, '|')
 	}
 
-	return strings.Join(parts, "|")
+	s = strings.TrimSpace(s)
+	s = strings.ToLower(s)
+
+	buf = append(buf, s...)
+	return buf
+}
+
+func DedupMaterial(f Finding) string {
+	// Optimization: Pre-allocate a 128-byte buffer to construct the deduplication string.
+	// This avoids allocating an intermediate []string slice and the overhead of strings.Join,
+	// reducing memory allocations during high-velocity processing.
+	buf := make([]byte, 0, 128)
+
+	buf = appendNormalized(buf, string(f.Kind), true)
+	buf = appendNormalized(buf, f.Rule.ID, false)
+	buf = append(buf, '|')
+	buf = append(buf, normalizedVulnerabilityID(f)...)
+	buf = appendNormalized(buf, f.PackageName(), false)
+	buf = appendNormalized(buf, f.PackageVersion(), false)
+	buf = appendNormalized(buf, f.PrimaryLocation.URI, false)
+	buf = appendNormalized(buf, f.Artifact.Name, false)
+	buf = appendNormalized(buf, f.CloudResourceID(), false)
+	buf = appendNormalized(buf, f.SecretFingerprint(), false)
+
+	return string(buf)
 }
 
 func DedupHash(f Finding) string {
