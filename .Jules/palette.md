@@ -1,0 +1,3 @@
+## 2024-06-13 - Fix terminal column alignment with ANSI codes using `tabwriter`
+**Learning:** When applying `\xff` wrapping around ANSI color codes for `text/tabwriter` alignment, ensure the `\xff` bytes are only used for text passed directly to the tabwriter. If written to a standard `io.Writer` or `os.Stdout`, the literal `\xff` characters will be printed and corrupt the output. Also, the `tabwriter.StripEscape` flag must be set during initialization.
+**Action:** Created `colorizeSeverityTabwriter` function distinct from `colorizeSeverity` and used constants wrapped with `\xff` exclusively for tabwriter fields. Avoided using these wrapped constants for the non-tabwriter outputs.

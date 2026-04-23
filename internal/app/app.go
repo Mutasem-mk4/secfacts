@@ -493,7 +493,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		isTerminal = isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
 	}
 
-	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
+	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.StripEscape)
 	_, _ = fmt.Fprintln(out, "")
 	_, _ = fmt.Fprintln(out, "Summary")
 	_, _ = fmt.Fprintf(tw, "Severity\tTotal\tSCA\tSAST\tDAST\tCloud\tSecrets\n")
@@ -510,7 +510,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 		severityText := strings.ToUpper(string(label))
 		if isTerminal {
-			severityText = colorizeSeverity(label, severityText)
+			severityText = colorizeSeverityTabwriter(label, severityText)
 		}
 
 		_, _ = fmt.Fprintf(
@@ -528,7 +528,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 	totalLabel := "TOTAL"
 	if isTerminal {
-		totalLabel = "\x1b[1mTOTAL\x1b[0m"
+		totalLabel = "\xff\x1b[1m\xffTOTAL\xff\x1b[0m\xff"
 	}
 
 	_, _ = fmt.Fprintf(tw, "%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
@@ -545,13 +545,13 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 func colorizeSeverity(label evidence.SeverityLabel, text string) string {
 	const (
-		reset     = "\x1b[0m"
-		bold      = "\x1b[1m"
-		red       = "\x1b[31m"
-		yellow    = "\x1b[33m"
-		cyan      = "\x1b[36m"
-		blue      = "\x1b[34m"
-		boldRed   = bold + red
+		reset   = "\x1b[0m"
+		bold    = "\x1b[1m"
+		red     = "\x1b[31m"
+		yellow  = "\x1b[33m"
+		cyan    = "\x1b[36m"
+		blue    = "\x1b[34m"
+		boldRed = bold + red
 	)
 
 	switch label {
@@ -563,6 +563,32 @@ func colorizeSeverity(label evidence.SeverityLabel, text string) string {
 		return cyan + text + reset
 	case evidence.SeverityInfo:
 		return blue + text + reset
+	default:
+		return text
+	}
+}
+
+func colorizeSeverityTabwriter(label evidence.SeverityLabel, text string) string {
+	const (
+		esc     = "\xff"
+		reset   = esc + "\x1b[0m" + esc
+		bold    = "\x1b[1m"
+		red     = "\x1b[31m"
+		yellow  = "\x1b[33m"
+		cyan    = "\x1b[36m"
+		blue    = "\x1b[34m"
+		boldRed = esc + bold + red + esc
+	)
+
+	switch label {
+	case evidence.SeverityCritical, evidence.SeverityHigh:
+		return boldRed + text + reset
+	case evidence.SeverityMedium:
+		return esc + yellow + esc + text + reset
+	case evidence.SeverityLow:
+		return esc + cyan + esc + text + reset
+	case evidence.SeverityInfo:
+		return esc + blue + esc + text + reset
 	default:
 		return text
 	}
