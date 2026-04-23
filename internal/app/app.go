@@ -343,7 +343,7 @@ func outputWriter(path string) (*os.File, func(), error) {
 		return os.Stdout, func() {}, nil
 	}
 
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+	file, err := os.Create(path)
 	if err != nil {
 		return nil, nil, sferr.Wrap(sferr.CodeIO, "normalize.outputWriter", err, "create output file")
 	}

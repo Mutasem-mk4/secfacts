@@ -1,4 +1,0 @@
-## 2026-03-01 - [Local Privilege Escalation / Path Traversal] Secure File Creation for Reports
-**Vulnerability:** When a user specified an output file for Axon (e.g., `-o report.json`), the program created the file using `os.Create(path)`. In Go, `os.Create` creates a file with default permissions `0666` (read and write for everyone, subject to umask). This meant that sensitive security reports containing evidence, secrets, and vulnerabilities could be read or modified by any local user on the machine.
-**Learning:** `os.Create` is often a poor choice for security tools generating sensitive output because of its overly permissive default mode (`0666`).
-**Prevention:** Instead of using `os.Create`, use `os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)`. The `0600` permission ensures that the file is only readable and writable by the user executing the program (the owner).
