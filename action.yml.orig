@@ -1,0 +1,58 @@
+name: 'Axon Ingest'
+description: 'High-performance security evidence normalization & correlation'
+author: 'Mutasem-mk4'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  input-path:
+    description: 'Path to security reports or directory to walk'
+    required: true
+    default: '.'
+  format:
+    description: 'Output format (json, sarif, asff)'
+    required: false
+    default: 'json'
+  output-file:
+    description: 'Path to write the normalized output'
+    required: false
+    default: 'axon-report.json'
+  fail-on-severity:
+    description: 'Fail if findings meet threshold (low, medium, high, critical)'
+    required: false
+  policy:
+    description: 'Path to YAML policy file'
+    required: false
+  concurrency:
+    description: 'Concurrent workers for processing'
+    required: false
+    default: '4'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+
+    - name: Build Axon
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        go build -o axon-bin ./cmd/axon || { go mod tidy && go build -o axon-bin ./cmd/axon; }
+        echo "${{ github.action_path }}" >> $GITHUB_PATH
+
+    - name: Run Axon Ingest
+      shell: bash
+      run: |
+        ARGS="ingest ${{ inputs.input-path }} -o ${{ inputs.output-file }} --format ${{ inputs.format }} --concurrency ${{ inputs.concurrency }}"
+        if [ -n "${{ inputs.fail-on-severity }}" ]; then
+          ARGS="$ARGS --fail-on-severity ${{ inputs.fail-on-severity }}"
+        fi
+        if [ -n "${{ inputs.policy }}" ]; then
+          ARGS="$ARGS --policy ${{ inputs.policy }}"
+        fi
+
+        axon-bin $ARGS

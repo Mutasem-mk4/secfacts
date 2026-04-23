@@ -1,0 +1,37 @@
+name: Axon Self-Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  axon-scan:
+    name: Security Inception
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Ingest with Axon
+        uses: ./
+        with:
+          input-path: 'trivy-results.sarif'
+          format: 'json'
+          output-file: 'axon-security-report.json'
+          fail-on-severity: 'high'
+
+      - name: Upload Axon Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: axon-security-report
+          path: axon-security-report.json

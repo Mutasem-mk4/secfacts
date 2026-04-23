@@ -254,16 +254,15 @@ func appendNormalizedHints(finding evidence.Finding) []evidence.RootCauseHint {
 }
 
 func deduplicateHints(hints []evidence.RootCauseHint) []evidence.RootCauseHint {
-	seen := make(map[string]struct{}, len(hints))
+	seen := make(map[evidence.RootCauseHint]struct{}, len(hints))
 	result := make([]evidence.RootCauseHint, 0, len(hints))
 
 	for _, hint := range hints {
-		compound := strings.Join([]string{hint.Type, hint.Key, hint.Value}, "|")
-		if _, exists := seen[compound]; exists {
+		if _, exists := seen[hint]; exists {
 			continue
 		}
 
-		seen[compound] = struct{}{}
+		seen[hint] = struct{}{}
 		result = append(result, hint)
 	}
 
