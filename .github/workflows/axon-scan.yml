@@ -22,13 +22,11 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
 
+      - name: Build Axon
+        run: GOTOOLCHAIN=local go build -mod=readonly -o axon-bin ./cmd/axon
+
       - name: Ingest with Axon
-        uses: ./axon
-        with:
-          input-path: 'trivy-results.sarif'
-          format: 'json'
-          output-file: 'axon-security-report.json'
-          fail-on-severity: 'high'
+        run: ./axon-bin ingest trivy-results.sarif -f json -o axon-security-report.json -s high
 
       - name: Upload Axon Report
         uses: actions/upload-artifact@v4
