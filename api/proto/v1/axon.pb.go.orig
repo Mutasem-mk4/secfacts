@@ -642,7 +642,7 @@ func file_axon_proto_rawDescGZIP() []byte {
 
 var file_axon_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_axon_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
-var file_axon_proto_goTypes = []interface{}{
+var file_axon_proto_goTypes = []any{
 	(FindingType)(0),              // 0: axon.v1.FindingType
 	(*Severity)(nil),              // 1: axon.v1.Severity
 	(*Vulnerability)(nil),         // 2: axon.v1.Vulnerability

@@ -126,6 +126,7 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 		colorRed    = "\033[31m"
 		colorYellow = "\033[33m"
 		colorCyan   = "\033[36m"
+		colorBlue   = "\033[34m"
 		colorBold   = "\033[1m"
 	)
 
@@ -143,18 +144,20 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 	}
 
 	fmt.Fprintf(tw, "Total Issues Found:\t%d\n", len(issues))
-	fmt.Fprintf(tw, "Critical Severity:\t%s%d%s\n", colorRed, severityCounts["critical"], colorReset)
-	fmt.Fprintf(tw, "High Severity:\t%s%d%s\n", colorYellow, severityCounts["high"], colorReset)
-	fmt.Fprintf(tw, "Medium Severity:\t%d\n", severityCounts["medium"])
+	fmt.Fprintf(tw, "Critical Severity:\t%s%s%d%s\n", colorBold, colorRed, severityCounts["critical"], colorReset)
+	fmt.Fprintf(tw, "High Severity:\t%s%s%d%s\n", colorBold, colorRed, severityCounts["high"], colorReset)
+	fmt.Fprintf(tw, "Medium Severity:\t%s%d%s\n", colorYellow, severityCounts["medium"], colorReset)
+	fmt.Fprintf(tw, "Low Severity:\t%s%d%s\n", colorCyan, severityCounts["low"], colorReset)
+	fmt.Fprintf(tw, "Info Severity:\t%s%d%s\n", colorBlue, severityCounts["info"], colorReset)
 	fmt.Fprintf(tw, "Highest Score:\t%.1f\n", maxScore)
 
 	tw.Flush()
 
 	if p.failScore > 0 {
-		status := "PASS"
+		status := "✅ PASS"
 		color := colorCyan
 		if maxScore >= p.failScore {
-			status = "FAIL"
+			status = "❌ FAIL"
 			color = colorRed
 		}
 		fmt.Fprintf(w, "\nThreshold Status: %s%s%s (Limit: %.1f)\n", color, status, colorReset, p.failScore)
