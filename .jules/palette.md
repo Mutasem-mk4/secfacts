@@ -1,0 +1,3 @@
+## 2024-04-24 - Tabwriter Color Alignment Fix
+**Learning:** When formatting terminal output with Go's `text/tabwriter` and ANSI color codes, tab columns misalign because `tabwriter` counts the ANSI escape sequences as regular characters. This app's UI is strictly CLI-based, so this alignment bug is a major visual UX issue.
+**Action:** Always use the `tabwriter.StripEscape` flag and wrap ANSI escape sequences in `\xff` bytes so that `tabwriter` ignores them when computing column widths. Note that `\xff` must ONLY wrap the text directly passed to the tabwriter, not output written straight to standard out.
