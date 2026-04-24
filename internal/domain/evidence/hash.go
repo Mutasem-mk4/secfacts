@@ -4,22 +4,58 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
-func DedupMaterial(f Finding) string {
-	parts := []string{
-		strings.ToLower(strings.TrimSpace(string(f.Kind))),
-		strings.ToLower(strings.TrimSpace(f.Rule.ID)),
-		normalizedVulnerabilityID(f),
-		strings.ToLower(strings.TrimSpace(f.PackageName())),
-		strings.ToLower(strings.TrimSpace(f.PackageVersion())),
-		strings.ToLower(strings.TrimSpace(f.PrimaryLocation.URI)),
-		strings.ToLower(strings.TrimSpace(f.Artifact.Name)),
-		strings.ToLower(strings.TrimSpace(f.CloudResourceID())),
-		strings.ToLower(strings.TrimSpace(f.SecretFingerprint())),
+func writeNormalizedField(b *strings.Builder, s string) {
+	s = strings.TrimSpace(s)
+	for i := 0; i < len(s); {
+		c := s[i]
+		if c < utf8.RuneSelf {
+			if 'A' <= c && c <= 'Z' {
+				b.WriteByte(c + ('a' - 'A'))
+			} else {
+				b.WriteByte(c)
+			}
+			i++
+		} else {
+			r, size := utf8.DecodeRuneInString(s[i:])
+			b.WriteRune(unicode.ToLower(r))
+			i += size
+		}
 	}
+}
 
-	return strings.Join(parts, "|")
+func DedupMaterial(f Finding) string {
+	var b strings.Builder
+	b.Grow(128)
+
+	writeNormalizedField(&b, string(f.Kind))
+	b.WriteByte('|')
+	writeNormalizedField(&b, f.Rule.ID)
+	b.WriteByte('|')
+
+	var vulnID string
+	if f.Vulnerability != nil {
+		vulnID = f.Vulnerability.ID
+	}
+	writeNormalizedField(&b, vulnID)
+	b.WriteByte('|')
+
+	writeNormalizedField(&b, f.PackageName())
+	b.WriteByte('|')
+	writeNormalizedField(&b, f.PackageVersion())
+	b.WriteByte('|')
+	writeNormalizedField(&b, f.PrimaryLocation.URI)
+	b.WriteByte('|')
+	writeNormalizedField(&b, f.Artifact.Name)
+	b.WriteByte('|')
+	writeNormalizedField(&b, f.CloudResourceID())
+	b.WriteByte('|')
+	writeNormalizedField(&b, f.SecretFingerprint())
+
+	return b.String()
 }
 
 func DedupHash(f Finding) string {
@@ -61,12 +97,4 @@ func (f Finding) SecretFingerprint() string {
 	}
 
 	return f.Secret.Fingerprint
-}
-
-func normalizedVulnerabilityID(f Finding) string {
-	if f.Vulnerability == nil {
-		return ""
-	}
-
-	return strings.ToLower(strings.TrimSpace(f.Vulnerability.ID))
 }
