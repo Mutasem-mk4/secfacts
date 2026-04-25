@@ -1,0 +1,3 @@
+## 2024-05-13 - Fix ANSI color wrapping in `text/tabwriter`
+**Learning:** `text/tabwriter` column alignment gets ruined by ANSI color escape codes because it counts the escape code characters as visible characters. Using the `tabwriter.StripEscape` flag and wrapping the escape codes in `\xff` characters allows `tabwriter` to strip them before calculating column widths, while still retaining the original escape sequences in the final output.
+**Action:** Always verify `tabwriter` column alignment when using ANSI colors. Use `tabwriter.StripEscape` and `\xff` wrappers consistently in the application code where terminal output formatting is managed.
