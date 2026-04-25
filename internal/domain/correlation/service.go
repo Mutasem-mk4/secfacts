@@ -37,7 +37,7 @@ func correlateCompact(compact []CompactFinding, representatives map[string]evide
 		return nil
 	}
 
-	initialCapacity := len(compact)/4 + 1
+	initialCapacity := len(representatives)
 	clusterIndex := make(map[string]int, initialCapacity)
 	clusters := make([]evidence.RootCauseCluster, 0, initialCapacity)
 

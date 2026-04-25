@@ -1,0 +1,3 @@
+## 2025-04-25 - Reduce slice reallocation in correlateCompact
+**Learning:** `initialCapacity := len(compact)/4 + 1` heavily underestimated the number of unique clusters, especially in datasets with low correlation. Because clusters were created with a small capacity, it caused large reallocations and memory overhead for `clusterIndex` and `clusters` slice. `len(representatives)` provides a perfectly accurate count of unique correlation keys, as it has already mapped them.
+**Action:** Always check if a previous map has already deduplicated the items being sliced, and use its length for the slice/map capacities instead of guessing from the raw input length.
