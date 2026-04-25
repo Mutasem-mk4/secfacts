@@ -545,12 +545,12 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 func colorizeSeverity(label evidence.SeverityLabel, text string) string {
 	const (
-		reset     = "\xff\x1b[0m\xff"
-		red       = "\xff\x1b[31m\xff"
-		yellow    = "\xff\x1b[33m\xff"
-		cyan      = "\xff\x1b[36m\xff"
-		blue      = "\xff\x1b[34m\xff"
-		boldRed   = "\xff\x1b[1m\x1b[31m\xff"
+		reset   = "\xff\x1b[0m\xff"
+		red     = "\xff\x1b[31m\xff"
+		yellow  = "\xff\x1b[33m\xff"
+		cyan    = "\xff\x1b[36m\xff"
+		blue    = "\xff\x1b[34m\xff"
+		boldRed = "\xff\x1b[1m\x1b[31m\xff"
 	)
 
 	switch label {
