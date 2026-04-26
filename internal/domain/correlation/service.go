@@ -37,7 +37,13 @@ func correlateCompact(compact []CompactFinding, representatives map[string]evide
 		return nil
 	}
 
-	initialCapacity := len(compact)/4 + 1
+	// ⚡ Bolt: Prevent expensive slice reallocations of RootCauseCluster (which contains the large
+	// Finding struct by value) by sizing to exact required capacity based on deduplicated map
+	initialCapacity := len(representatives)
+	if initialCapacity == 0 {
+		initialCapacity = len(compact)/4 + 1
+	}
+
 	clusterIndex := make(map[string]int, initialCapacity)
 	clusters := make([]evidence.RootCauseCluster, 0, initialCapacity)
 
