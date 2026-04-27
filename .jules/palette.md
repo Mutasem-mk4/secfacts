@@ -1,0 +1,3 @@
+## 2024-04-27 - Fix terminal column alignment with text/tabwriter and ANSI colors
+**Learning:** Using ANSI escape codes for colors in strings passed to Go's `text/tabwriter` causes column misalignment because the tabwriter counts the invisible escape code characters towards the column width.
+**Action:** Always initialize `text/tabwriter` with the `tabwriter.StripEscape` flag and wrap ANSI color codes with `\xff` specifically for strings passed into the tabwriter. Be careful not to wrap ANSI codes with `\xff` if they are being passed to a standard `io.Writer` (like `os.Stdout`), otherwise the literal `\xff` characters will print and corrupt the output.
