@@ -91,7 +91,7 @@ func (Parser) Provider() string {
 }
 
 func (Parser) Supports(filename string) bool {
-	return strings.EqualFold(filepath.Ext(filename), ".json")
+	return strings.EqualFold(filepath.Ext(filename), ".json") || strings.EqualFold(filepath.Ext(filename), ".sarif")
 }
 
 func (Parser) Parse(ctx context.Context, req ports.ParseRequest, sink ports.FindingSink) error {
