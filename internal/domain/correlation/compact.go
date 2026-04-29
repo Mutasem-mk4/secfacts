@@ -13,7 +13,7 @@ type CompactFinding struct {
 	Ref              evidence.FindingRef
 }
 
-func Compact(f evidence.Finding, ref evidence.FindingRef) CompactFinding {
+func Compact(f *evidence.Finding, ref evidence.FindingRef) CompactFinding {
 	key, kind, title := correlationKey(f)
 	return CompactFinding{
 		ID:               f.CanonicalID(),
