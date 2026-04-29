@@ -164,7 +164,7 @@ func (s Service) Run(ctx context.Context, req Request) (Result, error) {
 
 				finding := envelope.finding
 				ref := envelope.ref
-				compact := correlation.Compact(&finding, ref)
+				compact := correlation.Compact(finding, ref)
 				compactFindings = append(compactFindings, compact)
 				incrementCount(counts, compact.SeverityLabel, compact.Kind)
 				markSelected(selectedRefs, ref)

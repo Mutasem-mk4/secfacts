@@ -18,13 +18,11 @@ func (Service) Correlate(_ context.Context, findings []evidence.Finding) ([]evid
 
 	compact := make([]CompactFinding, 0, len(findings))
 	representatives := make(map[string]evidence.Finding, len(findings)/4+1)
-	// ⚡ Bolt: Use pointer semantics to avoid copying the large evidence.Finding struct on each iteration.
-	for i := range findings {
-		finding := &findings[i]
+	for _, finding := range findings {
 		ref := evidence.FindingRef{Path: finding.Source.Provider}
 		item := Compact(finding, ref)
 		compact = append(compact, item)
-		updateRepresentative(representatives, item, *finding)
+		updateRepresentative(representatives, item, finding)
 	}
 
 	return correlateCompact(compact, representatives), nil
@@ -88,7 +86,7 @@ func correlateCompact(compact []CompactFinding, representatives map[string]evide
 	return result
 }
 
-func correlationKey(f *evidence.Finding) (string, string, string) {
+func correlationKey(f evidence.Finding) (string, string, string) {
 	if f.Kind == evidence.KindSCA && f.Package != nil && f.Vulnerability != nil {
 		vulnerabilityID := f.Vulnerability.ID
 		if vulnerabilityID == "" && len(f.Vulnerability.Aliases) > 0 {
