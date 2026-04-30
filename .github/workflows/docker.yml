@@ -35,11 +35,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: secfacts/Dockerfile
+          file: Dockerfile
           push: true
           tags: |
-            secfacts/secfacts:latest
-            secfacts/secfacts:${{ github.ref_name }}
+            axon/axon:latest
+            axon/axon:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
           platforms: linux/amd64,linux/arm64

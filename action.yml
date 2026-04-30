@@ -42,7 +42,7 @@ runs:
       run: |
         cd ${{ github.action_path }}
         go build -o axon-bin ./cmd/axon
-        echo "${{ github.action_path }}" >> $GITHUB_PATH
+        echo "PATH=${{ github.action_path }}:$PATH" >> $GITHUB_ENV
 
     - name: Run Axon Ingest
       shell: bash
@@ -55,4 +55,4 @@ runs:
           ARGS="$ARGS --policy ${{ inputs.policy }}"
         fi
         
-        axon-bin $ARGS
+        ${{ github.action_path }}/axon-bin $ARGS
