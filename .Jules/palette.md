@@ -1,0 +1,3 @@
+## 2024-05-18 - Fix tabwriter ANSI alignment
+**Learning:** `text/tabwriter` calculates column widths based on string byte lengths. When formatting terminal output with Go's `text/tabwriter` and ANSI color codes, the ANSI escape sequences inflate the byte length, causing severe misalignment across columns.
+**Action:** Use `tabwriter.StripEscape` flag in `tabwriter.NewWriter` and wrap all ANSI color variables with the `\xff` escape byte (e.g. `\xff\033[31m\xff`). The tabwriter will strip the `\xff` bytes and skip counting the bytes in between them for alignment purposes, ensuring perfect column alignment even with colored terminal output.
