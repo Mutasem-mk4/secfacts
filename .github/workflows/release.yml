@@ -30,7 +30,6 @@ jobs:
           distribution: goreleaser
           version: latest
           args: release --clean
-          workdir: ./axon
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # If you have a separate tap repo, you would add its token here

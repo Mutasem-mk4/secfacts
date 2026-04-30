@@ -26,13 +26,13 @@ type results struct {
 }
 
 type failedCheck struct {
-	CheckID       string   `json:"check_id"`
-	CheckName     string   `json:"check_name"`
-	FilePath      string   `json:"file_path"`
-	FileLineRange []int    `json:"file_line_range"`
-	Resource      string   `json:"resource"`
-	Severity      string   `json:"severity"`
-	Description   string   `json:"description"`
+	CheckID       string `json:"check_id"`
+	CheckName     string `json:"check_name"`
+	FilePath      string `json:"file_path"`
+	FileLineRange []int  `json:"file_line_range"`
+	Resource      string `json:"resource"`
+	Severity      string `json:"severity"`
+	Description   string `json:"description"`
 }
 
 func (Parser) Provider() string {
