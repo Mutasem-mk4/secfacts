@@ -135,7 +135,6 @@ func sha256WithVersion(version string, material []byte) [32]byte {
 	return sha256.Sum256(*buffer)
 }
 
-
 func acquireIdentityBufferWithCap(n int) *[]byte {
 	buffer := identityBufferPool.Get().(*[]byte)
 	if cap(*buffer) < n {

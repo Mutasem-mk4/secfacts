@@ -7,7 +7,6 @@ import (
 	"github.com/axon/axon/internal/domain/evidence"
 )
 
-
 type Service struct{}
 
 func (Service) Correlate(_ context.Context, findings []evidence.Finding) ([]evidence.RootCauseCluster, error) {
