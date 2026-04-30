@@ -1,0 +1,4 @@
+## 2026-04-30 - Insecure Default File Permissions on Security Reports
+**Vulnerability:** The application was using `os.Create` to generate security report files. `os.Create` uses overly permissive default permissions (0666 before umask), potentially allowing other local users to read or modify sensitive security reports before they are properly secured.
+**Learning:** In Go, default file creation functions like `os.Create` or `os.WriteFile` do not enforce strict permissions, making them unsuitable for creating files containing sensitive information (like security scanning results or credentials) in multi-user environments.
+**Prevention:** Avoid `os.Create` when generating sensitive output files. Instead, explicitly specify restrictive file permissions (0600) using `os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)` to ensure only the owner can read/write the file from the moment it is created.
