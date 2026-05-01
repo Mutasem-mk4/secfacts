@@ -57,7 +57,9 @@ var scanCmd = &cobra.Command{
 
 		var out io.Writer = os.Stdout
 		if outputFile != "" {
-			f, err := os.Create(outputFile)
+			// SEC-001: Avoid os.Create due to overly permissive 0666 defaults.
+			// Use 0600 to prevent unauthorized access to sensitive security reports.
+			f, err := os.OpenFile(outputFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 			if err != nil {
 				return fmt.Errorf("failed to create output file: %w", err)
 			}
