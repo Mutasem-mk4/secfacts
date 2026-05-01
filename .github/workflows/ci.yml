@@ -17,7 +17,7 @@ jobs:
 
       - name: Go Mod Tidy Check
         run: |
-          go mod tidy
+          go install golang.org/dl/go1.25.0@latest && ~/go/bin/go1.25.0 download && GOTOOLCHAIN=local ~/go/bin/go1.25.0 mod tidy
           git diff --exit-code go.mod go.sum
 
       - name: Go Format Check
