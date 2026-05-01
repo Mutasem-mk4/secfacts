@@ -493,7 +493,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		isTerminal = isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
 	}
 
-	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
+	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.StripEscape)
 	_, _ = fmt.Fprintln(out, "")
 	_, _ = fmt.Fprintln(out, "Summary")
 	_, _ = fmt.Fprintf(tw, "Severity\tTotal\tSCA\tSAST\tDAST\tCloud\tSecrets\n")
@@ -528,7 +528,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 	totalLabel := "TOTAL"
 	if isTerminal {
-		totalLabel = "\x1b[1mTOTAL\x1b[0m"
+		totalLabel = "\xff\x1b[1m\xffTOTAL\xff\x1b[0m\xff"
 	}
 
 	_, _ = fmt.Fprintf(tw, "%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
@@ -556,13 +556,13 @@ func colorizeSeverity(label evidence.SeverityLabel, text string) string {
 
 	switch label {
 	case evidence.SeverityCritical, evidence.SeverityHigh:
-		return boldRed + text + reset
+		return "\xff" + boldRed + "\xff" + text + "\xff" + reset + "\xff"
 	case evidence.SeverityMedium:
-		return yellow + text + reset
+		return "\xff" + yellow + "\xff" + text + "\xff" + reset + "\xff"
 	case evidence.SeverityLow:
-		return cyan + text + reset
+		return "\xff" + cyan + "\xff" + text + "\xff" + reset + "\xff"
 	case evidence.SeverityInfo:
-		return blue + text + reset
+		return "\xff" + blue + "\xff" + text + "\xff" + reset + "\xff"
 	default:
 		return text
 	}
