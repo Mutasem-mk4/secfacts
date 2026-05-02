@@ -18,11 +18,13 @@ func (Service) Correlate(_ context.Context, findings []evidence.Finding) ([]evid
 
 	compact := make([]CompactFinding, 0, len(findings))
 	representatives := make(map[string]evidence.Finding, len(findings)/4+1)
-	for _, finding := range findings {
+	// ⚡ Bolt: Use index-based pointer semantics to avoid copying large structs in loops
+	for i := range findings {
+		finding := &findings[i]
 		ref := evidence.FindingRef{Path: finding.Source.Provider}
-		item := Compact(finding, ref)
+		item := Compact(*finding, ref)
 		compact = append(compact, item)
-		updateRepresentative(representatives, item, finding)
+		updateRepresentative(representatives, item, *finding)
 	}
 
 	return correlateCompact(compact, representatives), nil
