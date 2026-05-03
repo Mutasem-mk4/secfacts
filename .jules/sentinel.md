@@ -1,0 +1,4 @@
+## 2026-05-03 - Prevent Local Privilege Escalation via Insecure File Creation
+**Vulnerability:** The application was using Go's default `os.Create` function to write sensitive security reports and analysis output. `os.Create` sets overly permissive file permissions (0666 before umask), potentially allowing unauthorized local users to read or modify sensitive vulnerability findings and system insights.
+**Learning:** In Go, default file creation functions like `os.Create` are convenient but insecure for sensitive data because they default to 0666. Even with a standard umask, this often results in world-readable files (0644).
+**Prevention:** Always use `os.OpenFile` with explicit restrictive permissions (e.g., `os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600`) when generating security reports, logs, or any sensitive output files to ensure they are only accessible by the owner. Note that `os.CreateTemp` is safe as it uses 0600 by default.
