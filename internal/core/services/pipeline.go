@@ -7,6 +7,7 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/mattn/go-isatty"
 	"github.com/axon/axon/internal/core/domain"
 	"github.com/axon/axon/internal/core/ports"
 	"github.com/axon/axon/pkg/errors"
@@ -121,17 +122,28 @@ func (p *Pipeline) Run(ctx context.Context, input io.Reader, output io.Writer) e
 }
 
 func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
+	isTerminal := false
+	if f, ok := w.(*os.File); ok {
+		isTerminal = isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
+	}
+
 	const (
-		colorReset  = "\033[0m"
-		colorRed    = "\033[31m"
-		colorYellow = "\033[33m"
-		colorCyan   = "\033[36m"
-		colorBold   = "\033[1m"
+		twReset  = "\xff\033[0m\xff"
+		twRed    = "\xff\033[31m\xff"
+		twYellow = "\xff\033[33m\xff"
+		colorReset = "\033[0m"
+		colorCyan  = "\033[36m"
+		colorRedPlain = "\033[31m"
+		colorBold  = "\033[1m"
 	)
 
-	fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", colorBold, colorCyan, colorReset)
+	if isTerminal {
+		fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", colorBold, colorCyan, colorReset)
+	} else {
+		fmt.Fprintf(w, "\n=== AXON SCAN SUMMARY ===\n")
+	}
 
-	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', tabwriter.StripEscape)
 
 	severityCounts := make(map[string]int)
 	var maxScore float32
@@ -143,9 +155,14 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 	}
 
 	fmt.Fprintf(tw, "Total Issues Found:\t%d\n", len(issues))
-	fmt.Fprintf(tw, "Critical Severity:\t%s%d%s\n", colorRed, severityCounts["critical"], colorReset)
-	fmt.Fprintf(tw, "High Severity:\t%s%d%s\n", colorYellow, severityCounts["high"], colorReset)
-	fmt.Fprintf(tw, "Medium Severity:\t%d\n", severityCounts["medium"])
+	if isTerminal {
+		fmt.Fprintf(tw, "Critical Severity:\t%s🚨 %d%s\n", twRed, severityCounts["critical"], twReset)
+		fmt.Fprintf(tw, "High Severity:\t%s🔴 %d%s\n", twYellow, severityCounts["high"], twReset)
+	} else {
+		fmt.Fprintf(tw, "Critical Severity:\t🚨 %d\n", severityCounts["critical"])
+		fmt.Fprintf(tw, "High Severity:\t🔴 %d\n", severityCounts["high"])
+	}
+	fmt.Fprintf(tw, "Medium Severity:\t🟡 %d\n", severityCounts["medium"])
 	fmt.Fprintf(tw, "Highest Score:\t%.1f\n", maxScore)
 
 	tw.Flush()
@@ -153,11 +170,18 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 	if p.failScore > 0 {
 		status := "PASS"
 		color := colorCyan
+		icon := "✅"
 		if maxScore >= p.failScore {
 			status = "FAIL"
-			color = colorRed
+			color = colorRedPlain
+			icon = "❌"
 		}
-		fmt.Fprintf(w, "\nThreshold Status: %s%s%s (Limit: %.1f)\n", color, status, colorReset, p.failScore)
+
+		if isTerminal {
+			fmt.Fprintf(w, "\nThreshold Status: %s %s%s%s (Limit: %.1f)\n", icon, color, status, colorReset, p.failScore)
+		} else {
+			fmt.Fprintf(w, "\nThreshold Status: %s %s (Limit: %.1f)\n", icon, status, p.failScore)
+		}
 	}
 	fmt.Fprintln(w)
 }
