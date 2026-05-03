@@ -57,8 +57,7 @@ var scanCmd = &cobra.Command{
 
 		var out io.Writer = os.Stdout
 		if outputFile != "" {
-			// SECURITY: Use os.OpenFile with 0600 instead of os.Create to prevent unauthorized local read/write access.
-			f, err := os.OpenFile(outputFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+			f, err := os.Create(outputFile)
 			if err != nil {
 				return fmt.Errorf("failed to create output file: %w", err)
 			}
