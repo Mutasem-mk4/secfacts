@@ -1,0 +1,3 @@
+## 2025-05-04 - Optimize large struct iteration in policy evaluation
+**Learning:** Iterating over slices of large structs like `evidence.Finding` using value semantics (`for _, finding := range findings`) causes significant memory overhead due to repeated memory copies.
+**Action:** When iterating over slices of large structs, always use index-based pointer semantics (`for i := range findings { finding := &findings[i] }`) instead of value semantics to avoid expensive CPU overhead from repeated memory copies.
