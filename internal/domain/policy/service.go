@@ -62,12 +62,11 @@ type Service struct{}
 
 func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) BaselineDiff {
 	seenBaseline := make(map[evidence.Hash]evidence.Finding, len(baseline))
-	for i := range baseline {
-		finding := &baseline[i]
+	for _, finding := range baseline {
 		if finding.Identity.FingerprintV1.IsZero() {
 			continue
 		}
-		seenBaseline[finding.Identity.FingerprintV1] = *finding
+		seenBaseline[finding.Identity.FingerprintV1] = finding
 	}
 
 	diff := BaselineDiff{
@@ -77,21 +76,20 @@ func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) 
 	}
 
 	seenCurrent := make(map[evidence.Hash]struct{}, len(current))
-	for i := range current {
-		finding := &current[i]
+	for _, finding := range current {
 		fingerprint := finding.Identity.FingerprintV1
 		if fingerprint.IsZero() {
-			diff.New = append(diff.New, *finding)
+			diff.New = append(diff.New, finding)
 			continue
 		}
 
 		seenCurrent[fingerprint] = struct{}{}
 		if _, exists := seenBaseline[fingerprint]; exists {
-			diff.Existing = append(diff.Existing, *finding)
+			diff.Existing = append(diff.Existing, finding)
 			continue
 		}
 
-		diff.New = append(diff.New, *finding)
+		diff.New = append(diff.New, finding)
 	}
 
 	for fingerprint, finding := range seenBaseline {
@@ -197,8 +195,8 @@ func isAllowlisted(entries []AllowlistEntry, finding evidence.Finding) bool {
 
 func countBySeverity(findings []evidence.Finding) map[evidence.SeverityLabel]int {
 	counts := make(map[evidence.SeverityLabel]int, 5)
-	for i := range findings {
-		counts[normalizeSeverityLabel(findings[i].Severity.Label)]++
+	for _, finding := range findings {
+		counts[normalizeSeverityLabel(finding.Severity.Label)]++
 	}
 
 	return counts
