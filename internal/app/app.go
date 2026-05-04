@@ -493,7 +493,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		isTerminal = isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
 	}
 
-	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
+	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.StripEscape)
 	_, _ = fmt.Fprintln(out, "")
 	_, _ = fmt.Fprintln(out, "Summary")
 	_, _ = fmt.Fprintf(tw, "Severity\tTotal\tSCA\tSAST\tDAST\tCloud\tSecrets\n")
@@ -545,12 +545,13 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 func colorizeSeverity(label evidence.SeverityLabel, text string) string {
 	const (
-		reset     = "\x1b[0m"
-		bold      = "\x1b[1m"
-		red       = "\x1b[31m"
-		yellow    = "\x1b[33m"
-		cyan      = "\x1b[36m"
-		blue      = "\x1b[34m"
+		esc       = "\xff"
+		reset     = esc + "\x1b[0m" + esc
+		bold      = esc + "\x1b[1m" + esc
+		red       = esc + "\x1b[31m" + esc
+		yellow    = esc + "\x1b[33m" + esc
+		cyan      = esc + "\x1b[36m" + esc
+		blue      = esc + "\x1b[34m" + esc
 		boldRed   = bold + red
 	)
 
