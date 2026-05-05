@@ -1,0 +1,3 @@
+## 2024-05-18 - Terminal Output Alignment Fix
+**Learning:** When using `text/tabwriter` to format terminal output with ANSI color codes, `tabwriter.StripEscape` must be enabled unconditionally. However, the ANSI strings themselves must be wrapped conditionally in `\xff` escape characters only when outputting to a terminal. Writing literal `\xff` bytes to standard `io.Writer` (e.g., when outputting to a file) can corrupt the output.
+**Action:** Use `tabwriter.StripEscape` alongside conditional `\xff` wrappers around ANSI codes to ensure correct terminal alignment without compromising file exports.

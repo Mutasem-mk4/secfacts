@@ -493,7 +493,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		isTerminal = isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
 	}
 
-	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
+	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.StripEscape)
 	_, _ = fmt.Fprintln(out, "")
 	_, _ = fmt.Fprintln(out, "Summary")
 	_, _ = fmt.Fprintf(tw, "Severity\tTotal\tSCA\tSAST\tDAST\tCloud\tSecrets\n")
@@ -510,7 +510,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 		severityText := strings.ToUpper(string(label))
 		if isTerminal {
-			severityText = colorizeSeverity(label, severityText)
+			severityText = colorizeSeverity(label, severityText, true)
 		}
 
 		_, _ = fmt.Fprintf(
@@ -528,7 +528,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 	totalLabel := "TOTAL"
 	if isTerminal {
-		totalLabel = "\x1b[1mTOTAL\x1b[0m"
+		totalLabel = "\xff\x1b[1m\xffTOTAL\xff\x1b[0m\xff"
 	}
 
 	_, _ = fmt.Fprintf(tw, "%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
@@ -543,7 +543,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 	_ = tw.Flush()
 }
 
-func colorizeSeverity(label evidence.SeverityLabel, text string) string {
+func colorizeSeverity(label evidence.SeverityLabel, text string, forTabwriter bool) string {
 	const (
 		reset     = "\x1b[0m"
 		bold      = "\x1b[1m"
@@ -554,15 +554,22 @@ func colorizeSeverity(label evidence.SeverityLabel, text string) string {
 		boldRed   = bold + red
 	)
 
+	wrap := func(colorCode string) string {
+		if forTabwriter {
+			return "\xff" + colorCode + "\xff"
+		}
+		return colorCode
+	}
+
 	switch label {
 	case evidence.SeverityCritical, evidence.SeverityHigh:
-		return boldRed + text + reset
+		return wrap(boldRed) + text + wrap(reset)
 	case evidence.SeverityMedium:
-		return yellow + text + reset
+		return wrap(yellow) + text + wrap(reset)
 	case evidence.SeverityLow:
-		return cyan + text + reset
+		return wrap(cyan) + text + wrap(reset)
 	case evidence.SeverityInfo:
-		return blue + text + reset
+		return wrap(blue) + text + wrap(reset)
 	default:
 		return text
 	}

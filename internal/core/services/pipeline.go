@@ -7,6 +7,8 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/mattn/go-isatty"
+
 	"github.com/axon/axon/internal/core/domain"
 	"github.com/axon/axon/internal/core/ports"
 	"github.com/axon/axon/pkg/errors"
@@ -129,9 +131,23 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 		colorBold   = "\033[1m"
 	)
 
-	fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", colorBold, colorCyan, colorReset)
+	isTerminal := false
+	if f, ok := w.(*os.File); ok {
+		isTerminal = isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
+	}
 
-	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	outColorBold := ""
+	outColorCyan := ""
+	outColorReset := ""
+	if isTerminal {
+		outColorBold = colorBold
+		outColorCyan = colorCyan
+		outColorReset = colorReset
+	}
+
+	fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", outColorBold, outColorCyan, outColorReset)
+
+	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', tabwriter.StripEscape)
 
 	severityCounts := make(map[string]int)
 	var maxScore float32
@@ -142,9 +158,18 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 		}
 	}
 
+	twColorRed := ""
+	twColorYellow := ""
+	twColorReset := ""
+	if isTerminal {
+		twColorRed = "\xff" + colorRed + "\xff"
+		twColorYellow = "\xff" + colorYellow + "\xff"
+		twColorReset = "\xff" + colorReset + "\xff"
+	}
+
 	fmt.Fprintf(tw, "Total Issues Found:\t%d\n", len(issues))
-	fmt.Fprintf(tw, "Critical Severity:\t%s%d%s\n", colorRed, severityCounts["critical"], colorReset)
-	fmt.Fprintf(tw, "High Severity:\t%s%d%s\n", colorYellow, severityCounts["high"], colorReset)
+	fmt.Fprintf(tw, "Critical Severity:\t%s%d%s\n", twColorRed, severityCounts["critical"], twColorReset)
+	fmt.Fprintf(tw, "High Severity:\t%s%d%s\n", twColorYellow, severityCounts["high"], twColorReset)
 	fmt.Fprintf(tw, "Medium Severity:\t%d\n", severityCounts["medium"])
 	fmt.Fprintf(tw, "Highest Score:\t%.1f\n", maxScore)
 
@@ -152,12 +177,17 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 
 	if p.failScore > 0 {
 		status := "PASS"
-		color := colorCyan
+		color := ""
+		if isTerminal {
+			color = colorCyan
+		}
 		if maxScore >= p.failScore {
 			status = "FAIL"
-			color = colorRed
+			if isTerminal {
+				color = colorRed
+			}
 		}
-		fmt.Fprintf(w, "\nThreshold Status: %s%s%s (Limit: %.1f)\n", color, status, colorReset, p.failScore)
+		fmt.Fprintf(w, "\nThreshold Status: %s%s%s (Limit: %.1f)\n", color, status, outColorReset, p.failScore)
 	}
 	fmt.Fprintln(w)
 }
