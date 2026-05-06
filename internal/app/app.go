@@ -343,7 +343,7 @@ func outputWriter(path string) (*os.File, func(), error) {
 		return os.Stdout, func() {}, nil
 	}
 
-	file, err := os.Create(path)
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return nil, nil, sferr.Wrap(sferr.CodeIO, "normalize.outputWriter", err, "create output file")
 	}
@@ -545,13 +545,13 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 func colorizeSeverity(label evidence.SeverityLabel, text string) string {
 	const (
-		reset     = "\x1b[0m"
-		bold      = "\x1b[1m"
-		red       = "\x1b[31m"
-		yellow    = "\x1b[33m"
-		cyan      = "\x1b[36m"
-		blue      = "\x1b[34m"
-		boldRed   = bold + red
+		reset   = "\x1b[0m"
+		bold    = "\x1b[1m"
+		red     = "\x1b[31m"
+		yellow  = "\x1b[33m"
+		cyan    = "\x1b[36m"
+		blue    = "\x1b[34m"
+		boldRed = bold + red
 	)
 
 	switch label {
