@@ -57,7 +57,7 @@ var scanCmd = &cobra.Command{
 
 		var out io.Writer = os.Stdout
 		if outputFile != "" {
-			f, err := os.Create(outputFile)
+			f, err := os.OpenFile(outputFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 			if err != nil {
 				return fmt.Errorf("failed to create output file: %w", err)
 			}

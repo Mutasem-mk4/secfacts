@@ -1,0 +1,4 @@
+## 2025-02-26 - Insecure File Permissions on Security Reports
+**Vulnerability:** Security reports and logs were being created using `os.Create`, which defaults to 0666 permissions (read/write for everyone).
+**Learning:** `os.Create` should be avoided for files containing sensitive data like security vulnerabilities, as it allows local privilege escalation and unauthorized access on shared systems.
+**Prevention:** Always use `os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)` or `os.CreateTemp` (which defaults to 0600) to ensure restrictive permissions when writing sensitive output files.
