@@ -1,0 +1,3 @@
+## 2024-05-14 - Fix tabwriter column alignment with ANSI colors
+**Learning:** `text/tabwriter` calculates column widths using raw string lengths, which causes misaligned columns when ANSI color codes are present. To fix this without leaking invalid UTF-8 characters, `tabwriter.StripEscape` must be enabled, and ANSI escape sequences must be wrapped in `\xff` conditionally (only for text passed directly to the tabwriter, not to a standard `io.Writer`).
+**Action:** When using `text/tabwriter` for styled terminal output, always enable `tabwriter.StripEscape` and create separate tabwriter-specific constants that wrap ANSI codes in `\xff` for printing inside the tabwriter block.

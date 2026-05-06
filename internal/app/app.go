@@ -493,7 +493,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		isTerminal = isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
 	}
 
-	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
+	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.StripEscape)
 	_, _ = fmt.Fprintln(out, "")
 	_, _ = fmt.Fprintln(out, "Summary")
 	_, _ = fmt.Fprintf(tw, "Severity\tTotal\tSCA\tSAST\tDAST\tCloud\tSecrets\n")
@@ -510,7 +510,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 		severityText := strings.ToUpper(string(label))
 		if isTerminal {
-			severityText = colorizeSeverity(label, severityText)
+			severityText = colorizeSeverityTabwriter(label, severityText)
 		}
 
 		_, _ = fmt.Fprintf(
@@ -528,7 +528,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 	totalLabel := "TOTAL"
 	if isTerminal {
-		totalLabel = "\x1b[1mTOTAL\x1b[0m"
+		totalLabel = "\xff\x1b[1m\xffTOTAL\xff\x1b[0m\xff"
 	}
 
 	_, _ = fmt.Fprintf(tw, "%s\t%d\t%d\t%d\t%d\t%d\t%d\n",
@@ -551,6 +551,31 @@ func colorizeSeverity(label evidence.SeverityLabel, text string) string {
 		yellow    = "\x1b[33m"
 		cyan      = "\x1b[36m"
 		blue      = "\x1b[34m"
+		boldRed   = bold + red
+	)
+
+	switch label {
+	case evidence.SeverityCritical, evidence.SeverityHigh:
+		return boldRed + text + reset
+	case evidence.SeverityMedium:
+		return yellow + text + reset
+	case evidence.SeverityLow:
+		return cyan + text + reset
+	case evidence.SeverityInfo:
+		return blue + text + reset
+	default:
+		return text
+	}
+}
+
+func colorizeSeverityTabwriter(label evidence.SeverityLabel, text string) string {
+	const (
+		reset     = "\xff\x1b[0m\xff"
+		bold      = "\xff\x1b[1m\xff"
+		red       = "\xff\x1b[31m\xff"
+		yellow    = "\xff\x1b[33m\xff"
+		cyan      = "\xff\x1b[36m\xff"
+		blue      = "\xff\x1b[34m\xff"
 		boldRed   = bold + red
 	)
 
