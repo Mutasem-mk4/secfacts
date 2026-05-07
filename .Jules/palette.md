@@ -1,0 +1,3 @@
+## 2024-05-15 - ANSI Color Alignment in Tabwriter
+**Learning:** When using Go's `text/tabwriter` to format tabular data in the terminal, ANSI color escape sequences disrupt the column width calculations because the tabwriter counts the invisible escape characters as visible width, leading to misaligned columns.
+**Action:** Unconditionally enable `tabwriter.StripEscape` when initializing the tabwriter, and manually wrap all ANSI escape codes with `\xff` characters. This ensures the tabwriter strips the `\xff` wrappers and ignores the enclosed ANSI codes when calculating column widths, while still emitting the colors to the terminal.
