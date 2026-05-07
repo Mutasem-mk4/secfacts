@@ -37,11 +37,15 @@ func correlateCompact(compact []CompactFinding, representatives map[string]evide
 		return nil
 	}
 
-	initialCapacity := len(compact)/4 + 1
-	clusterIndex := make(map[string]int, initialCapacity)
-	clusters := make([]evidence.RootCauseCluster, 0, initialCapacity)
+	// Pre-allocate using the exact number of unique representatives
+	// to avoid slice reallocation which is costly given RootCauseCluster includes the large Finding struct.
+	exactCapacity := len(representatives)
+	clusterIndex := make(map[string]int, exactCapacity)
+	clusters := make([]evidence.RootCauseCluster, 0, exactCapacity)
 
-	for _, item := range compact {
+	// Iterate via index instead of value to prevent copying the CompactFinding struct repeatedly.
+	for i := range compact {
+		item := &compact[i]
 		if item.CorrelationKey == "" {
 			continue
 		}
@@ -57,12 +61,14 @@ func correlateCompact(compact []CompactFinding, representatives map[string]evide
 				Type:       item.CorrelationType,
 				Title:      item.CorrelationTitle,
 				FindingIDs: make([]string, 0, 4),
+				// Set the large Representative struct only once upon cluster initialization
+				// rather than repeatedly copying it.
+				Representative: representatives[id],
 			})
 		}
 
 		cluster := &clusters[index]
 		cluster.FindingIDs = append(cluster.FindingIDs, item.ID)
-		cluster.Representative = representatives[id]
 	}
 
 	result := clusters[:0]
