@@ -122,16 +122,25 @@ func (p *Pipeline) Run(ctx context.Context, input io.Reader, output io.Writer) e
 
 func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 	const (
-		colorReset  = "\033[0m"
-		colorRed    = "\033[31m"
-		colorYellow = "\033[33m"
-		colorCyan   = "\033[36m"
-		colorBold   = "\033[1m"
+		colorReset  = "\xff\033[0m\xff"
+		colorRed    = "\xff\033[31m\xff"
+		colorYellow = "\xff\033[33m\xff"
+		colorCyan   = "\xff\033[36m\xff"
+		colorBold   = "\xff\033[1m\xff"
 	)
 
-	fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", colorBold, colorCyan, colorReset)
+	// Note: w is usually os.Stderr. Do not use the \xff wrapped colors for direct formatting to io.Writer!
+	// \xff wrapper is ONLY for tabwriter! Let's define the non-wrapped colors for fmt.Fprintf(w, ...)
+	const (
+		rawReset = "\033[0m"
+		rawBold  = "\033[1m"
+		rawCyan  = "\033[36m"
+		rawRed   = "\033[31m"
+	)
 
-	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", rawBold, rawCyan, rawReset)
+
+	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', tabwriter.StripEscape)
 
 	severityCounts := make(map[string]int)
 	var maxScore float32
@@ -152,12 +161,12 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 
 	if p.failScore > 0 {
 		status := "PASS"
-		color := colorCyan
+		color := rawCyan
 		if maxScore >= p.failScore {
 			status = "FAIL"
-			color = colorRed
+			color = rawRed
 		}
-		fmt.Fprintf(w, "\nThreshold Status: %s%s%s (Limit: %.1f)\n", color, status, colorReset, p.failScore)
+		fmt.Fprintf(w, "\nThreshold Status: %s%s%s (Limit: %.1f)\n", color, status, rawReset, p.failScore)
 	}
 	fmt.Fprintln(w)
 }
