@@ -1,0 +1,4 @@
+## 2025-02-14 - Overly Permissive Output Files via os.Create
+**Vulnerability:** Found uses of `os.Create` for writing potentially sensitive output files (e.g., security scan results) in `internal/app/app.go` and `internal/cmd/scan.go`. `os.Create` defaults to `0666` permissions, potentially allowing local privilege escalation or unauthorized data access by other users on the system.
+**Learning:** In Go, default library functions like `os.Create` are not secure by default for sensitive data. Explicit file permission handling is required when dealing with sensitive information outputs.
+**Prevention:** Always use `os.OpenFile` with restrictive permissions like `0600` (e.g., `os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)`) when creating files that might contain sensitive security or system information, and avoid `os.Create` entirely.

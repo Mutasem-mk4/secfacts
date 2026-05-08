@@ -343,7 +343,9 @@ func outputWriter(path string) (*os.File, func(), error) {
 		return os.Stdout, func() {}, nil
 	}
 
-	file, err := os.Create(path)
+	// SECURITY: Use os.OpenFile instead of os.Create to enforce restrictive file permissions (0600)
+	// and prevent unauthorized access to potentially sensitive output data.
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return nil, nil, sferr.Wrap(sferr.CodeIO, "normalize.outputWriter", err, "create output file")
 	}
