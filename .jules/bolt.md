@@ -1,0 +1,3 @@
+## 2024-03-24 - Zero-copy struct iteration inside tight loops
+**Learning:** In Go, the standard `for _, value := range collection` syntax performs a copy of each element. When iterating over slices or arrays of large structs (like `evidence.Finding` which has many fields), this implicit copying causes significant CPU and memory overhead, especially inside high-throughput evaluation loops.
+**Action:** Use index-based pointer semantics (`for i := range collection { item := &collection[i] }`) and map references (`map[Hash]int` instead of `map[Hash]Struct`) to prevent expensive memory allocations and copies when iterating over collections of large structs.
