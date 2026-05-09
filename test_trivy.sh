@@ -1,0 +1,3 @@
+#!/bin/bash
+go install golang.org/x/vuln/cmd/govulncheck@latest
+GOTOOLCHAIN=local go test -mod=readonly ./...
