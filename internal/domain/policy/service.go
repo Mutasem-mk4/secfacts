@@ -61,12 +61,13 @@ type Violation struct {
 type Service struct{}
 
 func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) BaselineDiff {
-	seenBaseline := make(map[evidence.Hash]evidence.Finding, len(baseline))
-	for _, finding := range baseline {
-		if finding.Identity.FingerprintV1.IsZero() {
+	// Use map of indices instead of large struct copies to reduce memory overhead
+	seenBaseline := make(map[evidence.Hash]int, len(baseline))
+	for i := range baseline {
+		if baseline[i].Identity.FingerprintV1.IsZero() {
 			continue
 		}
-		seenBaseline[finding.Identity.FingerprintV1] = finding
+		seenBaseline[baseline[i].Identity.FingerprintV1] = i
 	}
 
 	diff := BaselineDiff{
@@ -76,27 +77,36 @@ func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) 
 	}
 
 	seenCurrent := make(map[evidence.Hash]struct{}, len(current))
-	for _, finding := range current {
+	for i := range current {
+		finding := &current[i]
 		fingerprint := finding.Identity.FingerprintV1
 		if fingerprint.IsZero() {
-			diff.New = append(diff.New, finding)
+			diff.New = append(diff.New, *finding)
 			continue
 		}
 
 		seenCurrent[fingerprint] = struct{}{}
 		if _, exists := seenBaseline[fingerprint]; exists {
-			diff.Existing = append(diff.Existing, finding)
+			diff.Existing = append(diff.Existing, *finding)
 			continue
 		}
 
-		diff.New = append(diff.New, finding)
+		diff.New = append(diff.New, *finding)
 	}
 
-	for fingerprint, finding := range seenBaseline {
+	// Iterate over baseline using index to avoid value copying
+	for i := range baseline {
+		fingerprint := baseline[i].Identity.FingerprintV1
+		if fingerprint.IsZero() {
+			continue
+		}
 		if _, exists := seenCurrent[fingerprint]; exists {
 			continue
 		}
-		diff.Fixed = append(diff.Fixed, finding)
+		// Match exact behavior of map deduplication (keep last seen)
+		if seenBaseline[fingerprint] == i {
+			diff.Fixed = append(diff.Fixed, baseline[i])
+		}
 	}
 
 	return diff
@@ -113,18 +123,19 @@ func (Service) Evaluate(_ context.Context, findings []evidence.Finding, diff Bas
 	}
 
 	filtered := make([]evidence.Finding, 0, len(evaluated))
-	for _, finding := range evaluated {
+	for i := range evaluated {
+		finding := &evaluated[i]
 		if isAllowlisted(policy.Allowlist, finding) {
 			continue
 		}
-		filtered = append(filtered, finding)
+		filtered = append(filtered, *finding)
 	}
 
 	violations := make([]Violation, 0)
 	if threshold := normalizeSeverityLabel(policy.FailOnSeverity); threshold != "" {
 		count := 0
-		for _, finding := range filtered {
-			if meetsSeverityThreshold(finding.Severity.Label, threshold) {
+		for i := range filtered {
+			if meetsSeverityThreshold(filtered[i].Severity.Label, threshold) {
 				count++
 			}
 		}
@@ -164,7 +175,7 @@ func (Service) Evaluate(_ context.Context, findings []evidence.Finding, diff Bas
 	}, nil
 }
 
-func isAllowlisted(entries []AllowlistEntry, finding evidence.Finding) bool {
+func isAllowlisted(entries []AllowlistEntry, finding *evidence.Finding) bool {
 	now := time.Now().UTC()
 	for _, entry := range entries {
 		if entry.ExpiresAt != nil && entry.ExpiresAt.Before(now) {
@@ -195,8 +206,8 @@ func isAllowlisted(entries []AllowlistEntry, finding evidence.Finding) bool {
 
 func countBySeverity(findings []evidence.Finding) map[evidence.SeverityLabel]int {
 	counts := make(map[evidence.SeverityLabel]int, 5)
-	for _, finding := range findings {
-		counts[normalizeSeverityLabel(finding.Severity.Label)]++
+	for i := range findings {
+		counts[normalizeSeverityLabel(findings[i].Severity.Label)]++
 	}
 
 	return counts
