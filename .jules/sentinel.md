@@ -1,0 +1,4 @@
+## 2025-05-18 - Insecure File and Directory Permissions for Application Logs
+**Vulnerability:** The application logs were being created with insecure file permissions (`0644`) and their parent directories were being created with `0755`. This allowed local users to read the log files which may contain sensitive information.
+**Learning:** Default permissions for file creation must always be reviewed, particularly when dealing with files that could contain sensitive or diagnostic information. Explicitly setting secure default permissions is necessary to ensure defense in depth against local privilege escalation and data leakage.
+**Prevention:** When creating sensitive output files or directories, use restrictive permissions: `0600` for files (e.g., via `os.OpenFile`) and `0700` for directories (e.g., via `os.MkdirAll`).
