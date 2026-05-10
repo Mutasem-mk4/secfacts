@@ -18,11 +18,11 @@ func (Service) Correlate(_ context.Context, findings []evidence.Finding) ([]evid
 
 	compact := make([]CompactFinding, 0, len(findings))
 	representatives := make(map[string]evidence.Finding, len(findings)/4+1)
-	for _, finding := range findings {
-		ref := evidence.FindingRef{Path: finding.Source.Provider}
-		item := Compact(finding, ref)
+	for i := range findings {
+		ref := evidence.FindingRef{Path: findings[i].Source.Provider}
+		item := Compact(findings[i], ref)
 		compact = append(compact, item)
-		updateRepresentative(representatives, item, finding)
+		updateRepresentative(representatives, item, findings[i])
 	}
 
 	return correlateCompact(compact, representatives), nil
@@ -41,38 +41,38 @@ func correlateCompact(compact []CompactFinding, representatives map[string]evide
 	clusterIndex := make(map[string]int, initialCapacity)
 	clusters := make([]evidence.RootCauseCluster, 0, initialCapacity)
 
-	for _, item := range compact {
-		if item.CorrelationKey == "" {
+	for i := range compact {
+		if compact[i].CorrelationKey == "" {
 			continue
 		}
 
-		id := item.CorrelationType + "|" + item.CorrelationKey
+		id := compact[i].CorrelationType + "|" + compact[i].CorrelationKey
 		index, exists := clusterIndex[id]
 		if !exists {
 			index = len(clusters)
 			clusterIndex[id] = index
 			clusters = append(clusters, evidence.RootCauseCluster{
 				ID:         id,
-				Key:        item.CorrelationKey,
-				Type:       item.CorrelationType,
-				Title:      item.CorrelationTitle,
+				Key:        compact[i].CorrelationKey,
+				Type:       compact[i].CorrelationType,
+				Title:      compact[i].CorrelationTitle,
 				FindingIDs: make([]string, 0, 4),
 			})
 		}
 
 		cluster := &clusters[index]
-		cluster.FindingIDs = append(cluster.FindingIDs, item.ID)
+		cluster.FindingIDs = append(cluster.FindingIDs, compact[i].ID)
 		cluster.Representative = representatives[id]
 	}
 
 	result := clusters[:0]
-	for _, cluster := range clusters {
-		if len(cluster.FindingIDs) < 2 {
+	for i := range clusters {
+		if len(clusters[i].FindingIDs) < 2 {
 			continue
 		}
 
-		sort.Strings(cluster.FindingIDs)
-		result = append(result, cluster)
+		sort.Strings(clusters[i].FindingIDs)
+		result = append(result, clusters[i])
 	}
 
 	sort.Slice(result, func(i int, j int) bool {
@@ -103,12 +103,12 @@ func correlationKey(f evidence.Finding) (string, string, string) {
 		return key, "sast_rule_file", "code path: " + key
 	}
 
-	for _, hint := range f.RootCauseHints {
-		if hint.Type == "" || hint.Value == "" {
+	for i := range f.RootCauseHints {
+		if f.RootCauseHints[i].Type == "" || f.RootCauseHints[i].Value == "" {
 			continue
 		}
 
-		return hint.Value, hint.Type, hint.Type + ": " + hint.Value
+		return f.RootCauseHints[i].Value, f.RootCauseHints[i].Type, f.RootCauseHints[i].Type + ": " + f.RootCauseHints[i].Value
 	}
 
 	if f.Image != nil && f.Image.BaseDigest != "" {
