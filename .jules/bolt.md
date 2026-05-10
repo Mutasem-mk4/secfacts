@@ -1,0 +1,3 @@
+## 2024-05-18 - Passing Large Structs by Value in Slices and Maps
+**Learning:** In Go, iterating over slices of large structs like `evidence.Finding` using value semantics (e.g. `for _, item := range collection`) or passing them around by value into maps creates significant CPU overhead from repeated memory copies.
+**Action:** Use index-based pointer semantics (`for i := range collection { item := &collection[i] }`) or pass references where appropriate to avoid memory overhead. Especially in `internal/domain/policy/service.go` and `internal/domain/correlation/service.go` where `evidence.Finding` is iterated over and passed around.
