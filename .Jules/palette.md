@@ -1,0 +1,3 @@
+## 2024-05-10 - Fix tabwriter column alignment with ANSI colors
+**Learning:** When using Go's `text/tabwriter` for CLI outputs, any ANSI escape sequences added to the strings being outputted will break column alignment. To fix this, the `tabwriter.StripEscape` flag should be used when configuring the `tabwriter.NewWriter`, and any ANSI formatting code passed to the writer must be wrapped inside `\xff` characters conditionally.
+**Action:** Always enable `tabwriter.StripEscape` in `tabwriter.NewWriter` and conditionally wrap ANSI code variables with `\xff` if we are outputting to standard output via the tabwriter.
