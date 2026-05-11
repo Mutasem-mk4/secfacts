@@ -1,0 +1,3 @@
+## 2026-05-11 - [Optimize struct iterations for memory efficiency]
+**Learning:** Iterating over slices of large structs (like `evidence.Finding`) by value (`for _, item := range collection`) incurs substantial CPU and memory overhead due to repeated copying. Additionally, storing these large structs by value in maps exacerbates the issue.
+**Action:** Use index-based loop semantics (`for i := range collection`) and access via indexing or pointers (`&collection[i]`). Also, when storing references to slice elements in a map, store the slice index (`map[Key]int`) instead of the entire struct (`map[Key]Struct`) to prevent copying the entire struct by value into the map.
