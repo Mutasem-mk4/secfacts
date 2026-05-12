@@ -1,0 +1,3 @@
+## 2025-05-12 - Optimize memory allocation for large struct slices
+**Learning:** For large struct instances like `evidence.Finding`, looping via value semantics (i.e. `for _, item := range`) inherently incurs heavy memory and CPU overhead compared to index-based pointer semantic loops (i.e. `for i := range items { ptr := &items[i] }`). This overhead is also similarly present when mapping large struct values, it is much more performant to map their corresponding indices (`map[Key]int`) rather than storing structs directly as value maps (`map[Key]Struct`).
+**Action:** Use index-based pointer semantics when iterating over arrays of large struct data types, and map their slice indices instead of values.
