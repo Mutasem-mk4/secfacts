@@ -1,0 +1,3 @@
+## 2024-05-13 - Tabwriter ANSI Color Alignment Fix
+**Learning:** When formatting terminal output using Go's `text/tabwriter` and ANSI color codes, the `tabwriter.StripEscape` flag is required. However, enabling this flag means any ANSI escape sequences must be explicitly wrapped in `\xff` bytes so the tabwriter knows to ignore their visual width when aligning columns. If these sequences are written directly without wrapping, `tabwriter` miscalculates column widths, breaking alignment.
+**Action:** Always enable `tabwriter.StripEscape` for formatted tables, and manually wrap conditional ANSI escape codes in `\xff` (`\xff\x1b[31m\xff`) prior to tabwriter ingestion.
