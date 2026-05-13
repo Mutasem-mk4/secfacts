@@ -1,4 +1,0 @@
-## 2024-05-13 - Insecure File Permissions on Log and Report Generation
-**Vulnerability:** Log files and reports were created using `os.Create` (default `0666`) or `os.MkdirAll(..., 0755)` which could allow local users read/write access to potentially sensitive information stored within logs and reports, which is a local privilege escalation/data leak risk.
-**Learning:** `os.Create` creates files with `0666` permissions, allowing any user on the system to read or modify the file, subject to the umask. When handling sensitive application logs or outputs such as security reports, more restrictive permissions should be used.
-**Prevention:** Avoid `os.Create` or hardcoding overly permissive flags like `0644`/`0755` when dealing with logs or output files. Instead, use `os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)` and `os.MkdirAll(dir, 0o700)` to ensure only the application user can read/write the output files.

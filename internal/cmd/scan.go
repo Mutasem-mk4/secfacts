@@ -57,8 +57,7 @@ var scanCmd = &cobra.Command{
 
 		var out io.Writer = os.Stdout
 		if outputFile != "" {
-			// SEC: Create reports with restricted permissions (0600)
-			f, err := os.OpenFile(outputFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
+			f, err := os.Create(outputFile)
 			if err != nil {
 				return fmt.Errorf("failed to create output file: %w", err)
 			}
