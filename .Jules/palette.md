@@ -1,0 +1,3 @@
+## 2024-03-24 - Improve CLI Visual Hierarchy
+**Learning:** Adding colors and emojis to terminal UI drastically improves scannability and user experience, especially when dealing with critical actions like applying AI remediation diffs. Defining ANSI escape codes as constants ensures cleaner and more maintainable output formatting logic.
+**Action:** Always define ANSI escape codes as reusable constants when formatting terminal output rather than hardcoding them inline, and use emojis purposefully to guide the user's eye to important information like notes, dry runs, prompts, and success messages.
