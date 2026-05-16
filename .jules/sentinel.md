@@ -1,0 +1,4 @@
+## 2024-05-24 - Secure File and Directory Creation
+**Vulnerability:** Use of `os.Create` and `os.MkdirAll` with permissive default permissions (e.g., `0o755` for directories, `0o666` typically for `os.Create`, or explicit `0o644` in `os.OpenFile`) when handling potentially sensitive output files and logs can lead to local privilege escalation and unauthorized access.
+**Learning:** In Go, creating directories and files without strictly restrictive permissions allows unauthorized read/write access. `os.Create` is especially dangerous as it uses standard `0o666` (before umask) without letting developers explicitly enforce 0o600.
+**Prevention:** Always use restrictive permissions: `0o700` for directories (e.g., via `os.MkdirAll`) and `0o600` for files (e.g., via `os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)` instead of `os.Create`).
