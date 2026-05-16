@@ -19,13 +19,13 @@ jobs:
         with:
           scan-type: 'fs'
           ignore-unfixed: true
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          format: 'json'
+          output: 'trivy-results.json'
 
       - name: Ingest with Axon
-        uses: ./axon
+        uses: ./
         with:
-          input-path: 'trivy-results.sarif'
+          input-path: 'trivy-results.json'
           format: 'json'
           output-file: 'axon-security-report.json'
           fail-on-severity: 'high'
