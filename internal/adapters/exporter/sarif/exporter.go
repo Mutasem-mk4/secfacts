@@ -186,7 +186,8 @@ func fromDocument(document evidence.Document) report {
 	rules := make(map[string]reportingDescriptor)
 	results := make([]result, 0, len(document.Findings))
 
-	for _, finding := range document.Findings {
+	for i := range document.Findings {
+		finding := &document.Findings[i]
 		if finding.Rule.ID != "" {
 			rules[finding.Rule.ID] = reportingDescriptor{
 				ID:   finding.Rule.ID,
@@ -201,7 +202,7 @@ func fromDocument(document evidence.Document) report {
 			RuleID:    finding.Rule.ID,
 			Level:     sarifLevel(finding.Severity),
 			Message:   message{Text: finding.Title},
-			Locations: buildLocations(finding),
+			Locations: buildLocations(*finding),
 			PartialFingerprints: map[string]string{
 				"dedupKey":       finding.Identity.DedupKey.String(),
 				"fingerprintV1":  finding.Identity.FingerprintV1.String(),
