@@ -7,3 +7,7 @@
 ## 2024-05-17 - GitHub Action local reference fix
 **Learning:** In GitHub Action workflow definitions, referring to a local custom action (like `./axon`) fails if the action file (`action.yml`) sits at the repository's root but the workflow specifies a subdirectory name (e.g. `uses: ./axon`). This results in a "Can't find 'action.yml', 'action.yaml' or 'Dockerfile'" error.
 **Action:** When using a custom local action defined at the root of the repository, always refer to it using `uses: ./` instead of `uses: ./<repo-name>`. Also, if the action expects a JSON format from Trivy, explicitly set the `format` to `json` and update the output filenames accordingly.
+
+## 2024-05-17 - Panic when updating protoc-gen-go
+**Learning:** Updating `google.golang.org/protobuf` can cause runtime panics (e.g. `slice bounds out of range [-1:]`) when running previously generated `.pb.go` files if the `protoc` generation was not done with the updated packages.
+**Action:** When updating or working with updated protobuf dependencies, regenerate the `.proto` files using the updated `protoc-gen-go` and `protoc-gen-go-grpc` tools via `protoc`.
