@@ -1,4 +1,0 @@
-## 2024-05-18 - Insecure File Permissions on Outputs and Logs
-**Vulnerability:** Files and directories for security reports and logs were being created using `os.Create` (which defaults to 0666 before umask) or `os.MkdirAll`/`os.OpenFile` with permissive modes like `0o755` and `0o644`. This allowed any local user on the machine to potentially read sensitive security data or application logs.
-**Learning:** `os.Create` is dangerous when writing sensitive output files as it does not enforce strict permissions. Even when using `os.OpenFile` and `os.MkdirAll`, default habits often lead to using overly permissive modes like `0644`/`0755` instead of explicitly restricting access.
-**Prevention:** Always use `os.OpenFile` with the `os.O_CREATE|os.O_WRONLY|os.O_TRUNC` (or `os.O_APPEND`) flags and explicit `0o600` permissions for sensitive files. For directories containing sensitive data, always use `0o700` with `os.MkdirAll` to prevent unauthorized local access.
